@@ -10,7 +10,7 @@ import (
 )
 
 func TestPutCollision(t *testing.T) {
-	t0 := New()
+	t0 := NewMap()
 
 	key1 := "Hello"
 	val1 := "World!"
@@ -32,7 +32,7 @@ func TestPutCollision(t *testing.T) {
 }
 
 func TestBasicPutGetRemove(t *testing.T) {
-	t0 := New()
+	t0 := NewMap()
 
 	key := "hello"
 	val := "world"
