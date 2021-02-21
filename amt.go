@@ -17,10 +17,6 @@ func present(bitmap uint32, bitpos uint32) bool {
 	return bitmap&bitpos != 0
 }
 
-func count(bitmap uint32) int {
-	return bits.OnesCount32(bitmap)
-}
-
 type any = interface{}
 
 // amt takes 32 bytes on 64bit archs
