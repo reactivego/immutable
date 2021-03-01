@@ -27,9 +27,9 @@ type amt struct {
 
 // item takes 48 bytes on 64bit archs
 type item struct {
-	prefix uint32      // 8 bytes on 64bit archs
-	key    []byte      // 24 bytes on 64bit archs
-	value  interface{} // 16 bytes on 64bit archs
+	prefix uint32 // 8 bytes on 64bit archs
+	key    []byte // 24 bytes on 64bit archs
+	value  any    // 16 bytes on 64bit archs
 }
 
 func (n *amt) len() int {
