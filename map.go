@@ -1,6 +1,11 @@
 package immutable
 
-import	"github.com/reactivego/immutable/byteorder"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/reactivego/immutable/byteorder"
+)
 
 type Map struct {
 	*amt
@@ -39,4 +44,20 @@ func (n Map) Put(key []byte, value any) *Map {
 func (n Map) Remove(key []byte) *Map {
 	n.amt = n.remove(byteorder.LittleEndian.Uint32(key), 0, key)
 	return &n
+}
+
+func (n Map) String() string {
+	var b strings.Builder
+	b.WriteByte('{')
+	sep := byte(0)
+	n.amt.foreach(func(k []byte, v any) {
+		if sep == 0 {
+			sep = ','
+		} else {
+			b.WriteByte(sep)
+		}
+		fmt.Fprintf(&b, "%q: %#v", k, v)
+	})
+	b.WriteByte('}')
+	return b.String()
 }
