@@ -64,7 +64,7 @@ func (n *amt) get(prefix uint32, shift uint8, k []byte) (any, bool) {
 	return nil, false
 }
 
-func (n *amt) enum(f func(k []byte, v any)) {
+func (n *amt) foreach(f func(k []byte, v any)) {
 	for _, e := range n.entries {
 		if d, ok := e.(item); ok {
 			f(d.key, d.value)

@@ -28,7 +28,7 @@ func (n *Map) Get(key []byte) any {
 }
 
 func (n *Map) Range(f func([]byte, any)) {
-	n.enum(f)
+	n.foreach(f)
 }
 
 func (n Map) Put(key []byte, value any) *Map {
