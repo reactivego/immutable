@@ -101,7 +101,7 @@ func (n amt) put(prefix uint32, shift uint8, key []byte, value any) *amt {
 				} else {
 					// prefix different or not at collision level, replace entry with node
 					node := &amt{}
-					node = node.put(prefix, shift+5, entry.key, entry.value)
+					node = node.put(entry.prefix, shift+5, entry.key, entry.value)
 					node = node.put(prefix, shift+5, key, value)
 					n.entries[index] = node
 				}
