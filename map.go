@@ -32,7 +32,7 @@ func (n *Map) Get(key []byte) any {
 	return v
 }
 
-func (n *Map) Range(f func([]byte, any)) {
+func (n *Map) Range(f func([]byte, any) bool) {
 	n.foreach(f)
 }
 
@@ -50,13 +50,14 @@ func (n Map) String() string {
 	var b strings.Builder
 	b.WriteByte('{')
 	sep := byte(0)
-	n.amt.foreach(func(k []byte, v any) {
+	n.amt.foreach(func(k []byte, v any) bool {
 		if sep == 0 {
 			sep = ','
 		} else {
 			b.WriteByte(sep)
 		}
-		fmt.Fprintf(&b, "%q: %#v", k, v)
+		_, err := fmt.Fprintf(&b, "%q: %#v", k, v)
+		return err == nil
 	})
 	b.WriteByte('}')
 	return b.String()

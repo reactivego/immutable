@@ -64,11 +64,13 @@ func (n *amt) get(prefix uint32, shift uint8, k []byte) (any, bool) {
 	return nil, false
 }
 
-func (n *amt) foreach(f func(k []byte, v any)) {
+func (n *amt) foreach(f func(k []byte, v any) bool) {
 	for _, e := range n.entries {
 		switch e := e.(type) {
 		case item:
-			f(e.key, e.value)
+			if !f(e.key, e.value) {
+				return
+			}
 		case *amt:
 			e.foreach(f)
 		}
