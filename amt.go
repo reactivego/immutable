@@ -76,8 +76,7 @@ func (n *amt) foreach(f func(k []byte, v any)) {
 }
 
 func (n amt) put(prefix uint32, shift uint8, key []byte, value any) *amt {
-	pos := mask(prefix, shift)
-	bitpos := uint32(1) << pos
+	bitpos := uint32(1) << mask(prefix, shift)
 	if present(n.bits, bitpos) {
 		// replace
 		index := index(n.bits, bitpos)
