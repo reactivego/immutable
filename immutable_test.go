@@ -31,7 +31,7 @@ func TestPutCollision(t *testing.T) {
 	assert.EqualInt(t, 3, t4.Len(), "t4.Len()")
 }
 
-func TestBasicPutGetRemove(t *testing.T) {
+func TestBasicPutGetDelete(t *testing.T) {
 	t0 := NewMap()
 
 	key := "hello"
@@ -43,7 +43,7 @@ func TestBasicPutGetRemove(t *testing.T) {
 	got, ok := t1.Get([]byte(key)).(string)
 	assert.True(t, ok, "t1.Get() expected key %q to be present", key)
 	assert.EqualString(t, val, got, "t1.Get()")
-	t2 := t1.Remove([]byte(key))
+	t2 := t1.Delete([]byte(key))
 	assert.EqualInt(t, 0, t0.Len(), "t0.Len()")
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
 	assert.EqualInt(t, 0, t2.Len(), "t2.Len()")

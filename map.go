@@ -41,8 +41,8 @@ func (n Map) Put(key []byte, value any) *Map {
 	return &n
 }
 
-func (n Map) Remove(key []byte) *Map {
-	n.amt = n.remove(byteorder.LittleEndian.Uint32(key), 0, key)
+func (n Map) Delete(key []byte) *Map {
+	n.amt = n.delete(byteorder.LittleEndian.Uint32(key), 0, key)
 	return &n
 }
 

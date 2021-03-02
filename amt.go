@@ -125,10 +125,10 @@ func (n amt) put(prefix uint32, shift uint8, key []byte, value any) *amt {
 	return &n
 }
 
-func (n amt) remove(prefix uint32, shift uint8, key []byte) *amt {
+func (n amt) delete(prefix uint32, shift uint8, key []byte) *amt {
 	bitpos := uint32(1) << mask(prefix, shift)
 	if present(n.bits, bitpos) {
-		// remove
+		// delete
 		index := index(n.bits, bitpos)
 		entries := make([]any, len(n.entries)-1)
 		n.bits &= ^bitpos
