@@ -7,6 +7,14 @@ import (
 	"github.com/reactivego/immutable/byteorder"
 )
 
+type MapError string
+
+func (e MapError) Error() string {
+	return string(e)
+}
+
+const InvalidKeyType = MapError("Invalid Key Type")
+
 type Map struct {
 	*amt
 }
@@ -23,26 +31,51 @@ func (n *Map) Depth() int {
 	return n.depth()
 }
 
-func (n *Map) Lookup(key []byte) (any, bool) {
-	return n.get(byteorder.LittleEndian.Uint32(key), 0, key)
+func (n *Map) Lookup(key any) (any, bool) {
+	if k, ok := key.([]byte); ok {
+		return n.get(byteorder.LittleEndian.Uint32(k), 0, k)
+	} else if k, ok := key.(string); ok {
+		return n.get(byteorder.LittleEndian.Uint32([]byte(k)), 0, []byte(k))
+	} else {
+		panic(InvalidKeyType)
+	}
 }
 
-func (n *Map) Get(key []byte) any {
-	v, _ := n.get(byteorder.LittleEndian.Uint32(key), 0, key)
-	return v
+func (n *Map) Get(key any) any {
+	if k, ok := key.([]byte); ok {
+		v, _ := n.get(byteorder.LittleEndian.Uint32(k), 0, k)
+		return v
+	} else if k, ok := key.(string); ok {
+		v, _ := n.get(byteorder.LittleEndian.Uint32([]byte(k)), 0, []byte(k))
+		return v
+	} else {
+		panic(InvalidKeyType)
+	}
 }
 
 func (n *Map) Range(f func([]byte, any) bool) {
 	n.foreach(f)
 }
 
-func (n Map) Put(key []byte, value any) *Map {
-	n.amt = n.put(byteorder.LittleEndian.Uint32(key), 0, key, value)
+func (n Map) Put(key, value any) *Map {
+	if k, ok := key.([]byte); ok {
+		n.amt = n.put(byteorder.LittleEndian.Uint32(k), 0, k, value)
+	} else if k, ok := key.(string); ok {
+		n.amt = n.put(byteorder.LittleEndian.Uint32([]byte(k)), 0, []byte(k), value)
+	} else {
+		panic(InvalidKeyType)
+	}
 	return &n
 }
 
-func (n Map) Delete(key []byte) *Map {
-	n.amt = n.delete(byteorder.LittleEndian.Uint32(key), 0, key)
+func (n Map) Delete(key any) *Map {
+	if k, ok := key.([]byte); ok {
+		n.amt = n.delete(byteorder.LittleEndian.Uint32(k), 0, k)
+	} else if k, ok := key.(string); ok {
+		n.amt = n.delete(byteorder.LittleEndian.Uint32([]byte(k)), 0, []byte(k))
+	} else {
+		panic(InvalidKeyType)
+	}
 	return &n
 }
 
