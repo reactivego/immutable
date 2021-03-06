@@ -9,6 +9,34 @@ import (
 	"github.com/reactivego/immutable/byteorder"
 )
 
+// TestKey implements a "hash" that can easily be forced into collisions.
+type TestKey string
+
+// Sum32 returns a hash value for the key, in this case just the head of the
+// string little endian encoded.
+func (k TestKey) Sum32() uint32 {
+	return byteorder.LittleEndian.Uint32([]byte(k))
+}
+
+func TestGetCollision(t *testing.T) {
+	t0 := NewMap()
+
+	k1 := TestKey("Hello1")
+	v1 := "World!"
+
+	k2 := TestKey("Hello2")
+	v2 := "There!"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	r2 := t2.Get(k2).(string)
+
+	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
+	assert.EqualInt(t, 2, t2.Len(), "t2.Len()")
+	assert.EqualInt(t, 8, t2.Depth(), "t2.Depth()")
+	assert.EqualString(t, v2, r2, "t2.Get()")
+}
+
 func TestPutCollision(t *testing.T) {
 	t0 := NewMap()
 
@@ -30,13 +58,6 @@ func TestPutCollision(t *testing.T) {
 	t4 := t3.Put(key4, val4)
 	assert.EqualInt(t, 3, t4.Len(), "t4.Len()")
 }
-
-func TestPutGet(t *testing.T) {
-
-
-
-}
-
 
 func TestBasicPutGetDelete(t *testing.T) {
 	t0 := NewMap()

@@ -4,6 +4,9 @@ import (
 	"math/bits"
 )
 
+const collision = 35
+const nextlevel = 5
+
 func mask(prefix uint32, shift uint8) uint8 {
 	return uint8(prefix>>shift) & 0x1f
 }
@@ -54,16 +57,29 @@ func (n *amt) depth() int {
 	return 1 + depth
 }
 
-func (n *amt) get(prefix uint32, shift uint8, k any) (any, bool) {
+func (n *amt) get(prefix uint32, shift uint8, key any) (any, bool) {
+	if shift == collision {
+		for _, entry := range n.entries {
+			if e := entry.(item); e.key == key {
+				return e.value, true
+			}
+		}
+		return nil, false
+	}
 	bitpos := uint32(1) << mask(prefix, shift)
 	if present(n.bits, bitpos) {
 		d := n.entries[index(n.bits, bitpos)]
-		return d.(item).value, true
+		switch e := d.(type) {
+		case item:
+			return e.value, true
+		case *amt:
+			return e.get(prefix, shift+nextlevel, key)
+		}
 	}
 	return nil, false
 }
 
-func (n *amt) foreach(f func(k, v any) bool) {
+func (n *amt) foreach(f func(key, value any) bool) {
 	for _, e := range n.entries {
 		switch e := e.(type) {
 		case item:
@@ -90,7 +106,7 @@ func (n amt) put(prefix uint32, shift uint8, key, value any) *amt {
 				// replace
 				n.entries[index] = item{prefix: prefix, key: key, value: value}
 			} else {
-				if entry.prefix == prefix && shift > 32 {
+				if entry.prefix == prefix && shift == collision {
 					// prefix collision, replace or insert an entry by enumerating entries
 					for index, entry := range n.entries {
 						if e := entry.(item); e.key == key {
@@ -102,14 +118,14 @@ func (n amt) put(prefix uint32, shift uint8, key, value any) *amt {
 				} else {
 					// prefix different or not at collision level, replace entry with node
 					node := &amt{}
-					node = node.put(entry.prefix, shift+5, entry.key, entry.value)
-					node = node.put(prefix, shift+5, key, value)
+					node = node.put(entry.prefix, shift+nextlevel, entry.key, entry.value)
+					node = node.put(prefix, shift+nextlevel, key, value)
 					n.entries[index] = node
 				}
 			}
 		} else {
 			node := entrynode.(*amt)
-			n.entries[index] = node.put(prefix, shift+5, key, value)
+			n.entries[index] = node.put(prefix, shift+nextlevel, key, value)
 		}
 	} else {
 		// insert
