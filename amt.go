@@ -1,7 +1,6 @@
 package immutable
 
 import (
-	"bytes"
 	"math/bits"
 )
 
@@ -25,10 +24,10 @@ type amt struct {
 	entries []any  // 24 bytes on 64bit archs
 }
 
-// item takes 48 bytes on 64bit archs
+// item takes 40 bytes on 64bit archs
 type item struct {
 	prefix uint32 // 8 bytes on 64bit archs
-	key    []byte // 24 bytes on 64bit archs
+	key    any    // 16 bytes on 64bit archs
 	value  any    // 16 bytes on 64bit archs
 }
 
@@ -55,7 +54,7 @@ func (n *amt) depth() int {
 	return 1 + depth
 }
 
-func (n *amt) get(prefix uint32, shift uint8, k []byte) (any, bool) {
+func (n *amt) get(prefix uint32, shift uint8, k any) (any, bool) {
 	bitpos := uint32(1) << mask(prefix, shift)
 	if present(n.bits, bitpos) {
 		d := n.entries[index(n.bits, bitpos)]
@@ -64,7 +63,7 @@ func (n *amt) get(prefix uint32, shift uint8, k []byte) (any, bool) {
 	return nil, false
 }
 
-func (n *amt) foreach(f func(k []byte, v any) bool) {
+func (n *amt) foreach(f func(k, v any) bool) {
 	for _, e := range n.entries {
 		switch e := e.(type) {
 		case item:
@@ -77,7 +76,7 @@ func (n *amt) foreach(f func(k []byte, v any) bool) {
 	}
 }
 
-func (n amt) put(prefix uint32, shift uint8, key []byte, value any) *amt {
+func (n amt) put(prefix uint32, shift uint8, key, value any) *amt {
 	bitpos := uint32(1) << mask(prefix, shift)
 	if present(n.bits, bitpos) {
 		// replace
@@ -87,14 +86,14 @@ func (n amt) put(prefix uint32, shift uint8, key []byte, value any) *amt {
 		n.entries = e
 		entrynode := n.entries[index]
 		if entry, ok := entrynode.(item); ok {
-			if entry.prefix == prefix && bytes.Equal(entry.key, key) {
+			if entry.prefix == prefix && entry.key == key {
 				// replace
 				n.entries[index] = item{prefix: prefix, key: key, value: value}
 			} else {
 				if entry.prefix == prefix && shift > 32 {
 					// prefix collision, replace or insert an entry by enumerating entries
 					for index, entry := range n.entries {
-						if e := entry.(item); bytes.Equal(e.key, key) {
+						if e := entry.(item); e.key == key {
 							n.entries[index] = item{prefix: prefix, key: key, value: value}
 							return &n
 						}
@@ -125,7 +124,7 @@ func (n amt) put(prefix uint32, shift uint8, key []byte, value any) *amt {
 	return &n
 }
 
-func (n amt) delete(prefix uint32, shift uint8, key []byte) *amt {
+func (n amt) delete(prefix uint32, shift uint8, key any) *amt {
 	bitpos := uint32(1) << mask(prefix, shift)
 	if present(n.bits, bitpos) {
 		// delete
