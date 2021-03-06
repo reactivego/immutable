@@ -59,22 +59,25 @@ func TestGetCollision(t *testing.T) {
 func TestPutCollision(t *testing.T) {
 	t0 := NewMap()
 
-	key1 := "Hello"
-	val1 := "World!"
-	key2 := key1
-	val2 := "There!"
-	key3 := "Hela"
-	val3 := "All!"
-	key4 := "Hella"
-	val4 := "Strange!"
+	k1 := "Hello"
+	v1 := "World!"
 
-	t1 := t0.Put(key1, val1)
+	k2 := k1
+	v2 := "There!"
+
+	k3 := "Hela"
+	v3 := "All!"
+
+	k4 := "Hella"
+	v4 := "Strange!"
+
+	t1 := t0.Put(k1, v1)
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
-	t2 := t1.Put(key2, val2)
+	t2 := t1.Put(k2, v2)
 	assert.EqualInt(t, 1, t2.Len(), "t2.Len()")
-	t3 := t2.Put(key3, val3)
+	t3 := t2.Put(k3, v3)
 	assert.EqualInt(t, 2, t3.Len(), "t3.Len()")
-	t4 := t3.Put(key4, val4)
+	t4 := t3.Put(k4, v4)
 	assert.EqualInt(t, 3, t4.Len(), "t4.Len()")
 }
 
