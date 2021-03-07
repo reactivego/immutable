@@ -18,6 +18,27 @@ func (k TestKey) Sum32() uint32 {
 	return byteorder.LittleEndian.Uint32([]byte(k))
 }
 
+func TestDelDeep(t *testing.T) {
+	t0 := NewMap()
+
+	k1 := TestKey("He1lo")
+	v1 := "World!"
+
+	k2 := TestKey("He2lo")
+	v2 := "There!"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Delete(k1)
+
+	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
+	assert.EqualInt(t, 1, t1.Depth(), "t1.Depth()")
+	assert.EqualInt(t, 2, t2.Len(), "t2.Len()")
+	assert.EqualInt(t, 4, t2.Depth(), "t2.Depth()")
+	assert.EqualInt(t, 1, t3.Len(), "t3.Len()")
+	assert.EqualInt(t, 1, t3.Depth(), "t3.Depth()")
+}
+
 func TestGetDeep(t *testing.T) {
 	t0 := NewMap()
 
