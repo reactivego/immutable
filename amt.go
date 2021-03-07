@@ -19,12 +19,13 @@ func present(bitmap uint32, bitpos uint32) bool {
 	return bitmap&bitpos != 0
 }
 
+// any takes 16 bytes on 64bit archs
 type any = interface{}
 
-// amt takes 32 bytes on 64bit archs
+// amt takes 32 + len(entries) * 16 bytes on 64bit archs
 type amt struct {
 	bits    uint32 // 8 bytes on 64bit archs
-	entries []any  // 24 bytes on 64bit archs
+	entries []any  // 24 + len(entries) * 16 bytes on 64bit archs
 }
 
 // item takes 40 bytes on 64bit archs
