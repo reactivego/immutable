@@ -45,6 +45,10 @@ func (n *Map) Depth() int {
 	return n.depth()
 }
 
+func (n *Map) Size() int {
+	return 8 + n.size()
+}
+
 func (n *Map) Lookup(key any) (any, bool) {
 	return n.get(prefix(key), 0, key)
 }
