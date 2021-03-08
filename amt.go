@@ -11,6 +11,10 @@ func mask(prefix uint32, shift uint8) uint8 {
 	return uint8(prefix>>shift) & 0x1f
 }
 
+func bitpos(pos uint8) uint32 {
+	return uint32(1) << pos
+}
+
 func index(bitmap uint32, bitpos uint32) int {
 	return bits.OnesCount32(bitmap & (bitpos - 1))
 }

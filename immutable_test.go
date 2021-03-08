@@ -128,95 +128,84 @@ func TestBasicPutGetDelete(t *testing.T) {
 	assert.True(t, nil == gotraw, "t2.Get() expected key %q to be removed", key)
 }
 
-func TestEntryIndexGet(t *testing.T) {
-	index2get := func(bitmap uint32, pos uint8) int {
-		bitpos := uint32(1) << pos
-		if present(bitmap, bitpos) {
-			return index(bitmap, bitpos)
-		}
-		return -1
-	}
-	tests := []struct{ exp, got int }{
+func TestEntryPresent(t *testing.T) {
+	tests := []struct{ exp, got bool }{
 		/*0*/
-		{exp: 0, got: index2get(0b0001, 0)},
-		{exp: 0, got: index2get(0b0010, 1)},
-		{exp: 0, got: index2get(0b0100, 2)},
-		{exp: 0, got: index2get(0b1000, 3)},
-		{exp: -1, got: index2get(0b0010, 0)},
+		{exp: true, got: present(0b0001, bitpos(0))},
+		{exp: true, got: present(0b0010, bitpos(1))},
+		{exp: true, got: present(0b0100, bitpos(2))},
+		{exp: true, got: present(0b1000, bitpos(3))},
+		{exp: false, got: present(0b0010, bitpos(0))},
 
 		/*5*/
-		{exp: -1, got: index2get(0b0100, 0)},
-		{exp: 0, got: index2get(0b0100, 2)},
-		{exp: -1, got: index2get(0b0100, 3)},
-		{exp: 1, got: index2get(0b1100, 3)},
-		{exp: -1, got: index2get(0b10100, 3)},
+		{exp: false, got: present(0b0100, bitpos(0))},
+		{exp: true, got: present(0b0100, bitpos(2))},
+		{exp: false, got: present(0b0100, bitpos(3))},
+		{exp: true, got: present(0b1100, bitpos(3))},
+		{exp: false, got: present(0b10100, bitpos(3))},
 
 		/*10*/
-		{exp: 2, got: index2get(0b11100, 4)},
-		{exp: 2, got: index2get(0b111100, 4)},
-		{exp: 3, got: index2get(0b111100, 5)},
-		{exp: 0, got: index2get(0b100100, 2)},
-		{exp: 1, got: index2get(0b100100, 5)},
+		{exp: true, got: present(0b11100, bitpos(4))},
+		{exp: true, got: present(0b111100, bitpos(4))},
+		{exp: true, got: present(0b111100, bitpos(5))},
+		{exp: true, got: present(0b100100, bitpos(2))},
+		{exp: true, got: present(0b100100, bitpos(5))},
 
 		/*15*/
-		{exp: -1, got: index2get(0b1001010, 0)},
-		{exp: 0, got: index2get(0b1001010, 1)},
-		{exp: -1, got: index2get(0b1001010, 2)},
-		{exp: 1, got: index2get(0b1001010, 3)},
-		{exp: -1, got: index2get(0b1001010, 4)},
+		{exp: false, got: present(0b1001010, bitpos(0))},
+		{exp: true, got: present(0b1001010, bitpos(1))},
+		{exp: false, got: present(0b1001010, bitpos(2))},
+		{exp: true, got: present(0b1001010, bitpos(3))},
+		{exp: false, got: present(0b1001010, bitpos(4))},
 
 		/*20*/
-		{exp: -1, got: index2get(0b1001010, 5)},
-		{exp: 2, got: index2get(0b1001010, 6)},
-		{exp: -1, got: index2get(0b1001010, 7)},
-		{exp: -1, got: index2get(0b1001010, 7)},
-		{exp: -1, got: index2get(0b1001010, 240)},
+		{exp: false, got: present(0b1001010, bitpos(5))},
+		{exp: true, got: present(0b1001010, bitpos(6))},
+		{exp: false, got: present(0b1001010, bitpos(7))},
+		{exp: false, got: present(0b1001010, bitpos(7))},
+		{exp: false, got: present(0b1001010, bitpos(240))},
 	}
 	for i, test := range tests {
-		assert.EqualInt(t, test.exp, test.got, fmt.Sprintf("index2get(n) test:%d", i))
+		assert.EqualBool(t, test.exp, test.got, fmt.Sprintf("present(n, bitpos(m)) test:%d", i))
 	}
 }
 
-func TestEntryIndexInsert(t *testing.T) {
-	index2insert := func(bitmap uint32, pos uint8) int {
-		return index(bitmap, uint32(1)<<pos)
-	}
-
+func TestEntryIndex(t *testing.T) {
 	tests := []struct{ exp, got int }{
 		/*0*/
-		{exp: 0, got: index2insert(0b0000, 0)},
-		{exp: 0, got: index2insert(0b0000, 1)},
-		{exp: 0, got: index2insert(0b0001, 0)},
-		{exp: 1, got: index2insert(0b0001, 1)},
-		{exp: 1, got: index2insert(0b0001, 2)},
+		{exp: 0, got: index(0b0000, bitpos(0))},
+		{exp: 0, got: index(0b0000, bitpos(1))},
+		{exp: 0, got: index(0b0001, bitpos(0))},
+		{exp: 1, got: index(0b0001, bitpos(1))},
+		{exp: 1, got: index(0b0001, bitpos(2))},
 
 		/*5*/
-		{exp: 0, got: index2insert(0b0100, 0)},
-		{exp: 0, got: index2insert(0b0100, 1)},
-		{exp: 0, got: index2insert(0b0100, 2)},
-		{exp: 1, got: index2insert(0b0100, 3)},
-		{exp: 1, got: index2insert(0b0100, 4)},
+		{exp: 0, got: index(0b0100, bitpos(0))},
+		{exp: 0, got: index(0b0100, bitpos(1))},
+		{exp: 0, got: index(0b0100, bitpos(2))},
+		{exp: 1, got: index(0b0100, bitpos(3))},
+		{exp: 1, got: index(0b0100, bitpos(4))},
 
 		/*10*/
-		{exp: 3, got: index2insert(0b011110, 4)},
-		{exp: 4, got: index2insert(0b011110, 5)},
-		{exp: 4, got: index2insert(0b011110, 6)},
-		{exp: 4, got: index2insert(0b011110, 7)},
-		{exp: 4, got: index2insert(0b011110, 31)},
+		{exp: 3, got: index(0b011110, bitpos(4))},
+		{exp: 4, got: index(0b011110, bitpos(5))},
+		{exp: 4, got: index(0b011110, bitpos(6))},
+		{exp: 4, got: index(0b011110, bitpos(7))},
+		{exp: 4, got: index(0b011110, bitpos(31))},
 
 		/*15*/
-		{exp: 0, got: index2insert(0b1001010, 0)},
-		{exp: 0, got: index2insert(0b1001010, 1)},
-		{exp: 1, got: index2insert(0b1001010, 2)},
-		{exp: 1, got: index2insert(0b1001010, 3)},
-		{exp: 2, got: index2insert(0b1001010, 4)},
+		{exp: 0, got: index(0b1001010, bitpos(0))},
+		{exp: 0, got: index(0b1001010, bitpos(1))},
+		{exp: 1, got: index(0b1001010, bitpos(2))},
+		{exp: 1, got: index(0b1001010, bitpos(3))},
+		{exp: 2, got: index(0b1001010, bitpos(4))},
 
 		/*20*/
-		{exp: 2, got: index2insert(0b1001010, 5)},
-		{exp: 2, got: index2insert(0b1001010, 6)},
-		{exp: 3, got: index2insert(0b1001010, 7)},
-		{exp: 3, got: index2insert(0b1001010, 9)},
-		{exp: 3, got: index2insert(0b1001010, 240)},
+		{exp: 2, got: index(0b1001010, bitpos(5))},
+		{exp: 2, got: index(0b1001010, bitpos(6))},
+		{exp: 3, got: index(0b1001010, bitpos(7))},
+		{exp: 3, got: index(0b1001010, bitpos(9))},
+		{exp: 3, got: index(0b1001010, bitpos(240))},
 	}
 	for i, test := range tests {
 		assert.EqualInt(t, test.exp, test.got, fmt.Sprintf("index() test:%d", i))
@@ -238,6 +227,29 @@ func TestMask(t *testing.T) {
 	}
 }
 
+func TestSize(t *testing.T) {
+	t0 := &amt{}
+	t1 := t0.put(0, 0, "Hello", "World!")
+	assert.EqualInt(t, 32, int(unsafe.Sizeof(amt{})), "unsafe.Sizeof(amt{})")
+	assert.EqualInt(t, 32, t0.size(), "t0.size()")
+	assert.EqualInt(t, 16, int(unsafe.Sizeof(t1.entries[0])), "unsafe.Sizeof(t1.entries[0])")
+	assert.EqualInt(t, 40, int(unsafe.Sizeof(item{})), "unsafe.Sizeof(item{})")
+	assert.EqualInt(t, 32+16+40, t1.size(), "t1.size()")
+
+	m0 := NewMap()
+	m1 := m0.Put("Hello", "World!")
+	m2 := m1.Put("He11o", "There!")
+
+	assert.EqualInt(t, 8, int(unsafe.Sizeof(Map{})), "unsafe.Sizeof(Map{})")
+	assert.EqualInt(t, 40, m0.Size(), "m0.Size()")
+
+	assert.EqualInt(t, 96, m1.Size(), "m1.Size()")
+
+	assert.EqualInt(t, 2, m2.Len(), "m2.Len()")
+	assert.EqualInt(t, 4, m2.Depth(), "m2.Depth()")
+	assert.EqualInt(t, 8+48+48+48+64+80, m2.Size(), "m2.Size()")
+}
+
 func TestLittleEndianUint32(t *testing.T) {
 	tests := []struct{ exp, got uint32 }{
 		{exp: 0, got: byteorder.LittleEndian.Uint32([]byte{})},
@@ -254,22 +266,13 @@ func TestLittleEndianUint32(t *testing.T) {
 	}
 }
 
-func TestSize(t *testing.T) {
-	t0 := &amt{}
-	t1 := t0.put(0, 0, "Hello", "World!")
-	assert.EqualInt(t, 32, int(unsafe.Sizeof(amt{})), "unsafe.Sizeof(amt{})")
-	assert.EqualInt(t, 32, t0.size(), "t0.size()")
-	assert.EqualInt(t, 16, int(unsafe.Sizeof(t1.entries[0])), "unsafe.Sizeof(t1.entries[0])")
-	assert.EqualInt(t, 40, int(unsafe.Sizeof(item{})), "unsafe.Sizeof(item{})")
-	assert.EqualInt(t, 32+16+40, t1.size(), "t1.size()")
-}
-
 var assert = struct {
 	True        func(t *testing.T, correct bool, msg string, info ...interface{})
 	EqualString func(t *testing.T, exp, got string, msg string)
 	EqualInt    func(t *testing.T, exp, got int, msg string)
 	EqualUint8  func(t *testing.T, exp, got uint8, msg string)
 	EqualUint32 func(t *testing.T, exp, got uint32, msg string)
+	EqualBool   func(t *testing.T, exp, got bool, msg string)
 }{
 	True: func(t *testing.T, correct bool, msg string, info ...interface{}) {
 		t.Helper()
@@ -299,6 +302,12 @@ var assert = struct {
 		t.Helper()
 		if exp != got {
 			t.Errorf(msg+" expected %d got %d", exp, got)
+		}
+	},
+	EqualBool: func(t *testing.T, exp, got bool, msg string) {
+		t.Helper()
+		if exp != got {
+			t.Errorf(msg+" expected %t got %t", exp, got)
 		}
 	},
 }
