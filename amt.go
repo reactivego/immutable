@@ -149,12 +149,12 @@ func (n amt) put(prefix uint32, shift uint8, key, value any) *amt {
 		}
 	} else {
 		index := index(n.bits, bitpos)
-		e := make([]any, len(n.entries)+1)
+		entries := make([]any, len(n.entries)+1)
 		n.bits |= bitpos
-		copy(e, n.entries[:index])
-		copy(e[index+1:], n.entries[index:])
-		e[index] = item{prefix: prefix, key: key, value: value}
-		n.entries = e
+		copy(entries, n.entries[:index])
+		copy(entries[index+1:], n.entries[index:])
+		entries[index] = item{prefix: prefix, key: key, value: value}
+		n.entries = entries
 	}
 	return &n
 }

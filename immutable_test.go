@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"testing"
 	"unsafe"
-
-	"github.com/reactivego/immutable/byteorder"
 )
 
 // TestKey implements a "hash" that can easily be forced into collisions.
@@ -15,11 +13,11 @@ type TestKey string
 // Sum32 returns a hash value for the key, in this case just the head of the
 // string little endian encoded.
 func (k TestKey) Sum32() uint32 {
-	return byteorder.LittleEndian.Uint32([]byte(k))
+	return Uint32LE(string(k))
 }
 
 func TestDelDeep(t *testing.T) {
-	t0 := NewMap()
+	t0 := Map
 
 	k1 := TestKey("He1lo")
 	v1 := "World!"
@@ -44,7 +42,7 @@ func TestDelDeep(t *testing.T) {
 }
 
 func TestGetDeep(t *testing.T) {
-	t0 := NewMap()
+	t0 := Map
 
 	k1 := TestKey("He1lo")
 	v1 := "World!"
@@ -63,7 +61,7 @@ func TestGetDeep(t *testing.T) {
 }
 
 func TestGetCollision(t *testing.T) {
-	t0 := NewMap()
+	t0 := Map
 
 	k1 := TestKey("Hello1")
 	v1 := "World!"
@@ -82,18 +80,18 @@ func TestGetCollision(t *testing.T) {
 }
 
 func TestPutCollision(t *testing.T) {
-	t0 := NewMap()
+	t0 := Map
 
-	k1 := "Hello"
+	k1 := TestKey("Hello")
 	v1 := "World!"
 
 	k2 := k1
 	v2 := "There!"
 
-	k3 := "Hela"
+	k3 := TestKey("Hela")
 	v3 := "All!"
 
-	k4 := "Hella"
+	k4 := TestKey("Hella")
 	v4 := "Strange!"
 
 	t1 := t0.Put(k1, v1)
@@ -107,9 +105,9 @@ func TestPutCollision(t *testing.T) {
 }
 
 func TestBasicPutGetDelete(t *testing.T) {
-	t0 := NewMap()
+	t0 := Map
 
-	key := "hello"
+	key := TestKey("hello")
 	val := "world"
 
 	t1 := t0.Put(key, val)
@@ -236,11 +234,12 @@ func TestSize(t *testing.T) {
 	assert.EqualInt(t, 40, int(unsafe.Sizeof(item{})), "unsafe.Sizeof(item{})")
 	assert.EqualInt(t, 32+16+40, t1.size(), "t1.size()")
 
-	m0 := NewMap()
-	m1 := m0.Put("Hello", "World!")
-	m2 := m1.Put("He11o", "There!")
+	m0 := Map
+	m1 := m0.Put(TestKey("Hello"), "World!")
+	m2 := m1.Put(TestKey("He11o"), "There!")
 
-	assert.EqualInt(t, 8, int(unsafe.Sizeof(Map{})), "unsafe.Sizeof(Map{})")
+	assert.EqualInt(t, 8, int(unsafe.Sizeof(Map)), "unsafe.Sizeof(Map)")
+	assert.EqualInt(t, 8, int(unsafe.Sizeof(*Map)), "unsafe.Sizeof(*Map)")
 	assert.EqualInt(t, 40, m0.Size(), "m0.Size()")
 
 	assert.EqualInt(t, 96, m1.Size(), "m1.Size()")
@@ -250,19 +249,34 @@ func TestSize(t *testing.T) {
 	assert.EqualInt(t, 8+48+48+48+64+80, m2.Size(), "m2.Size()")
 }
 
-func TestLittleEndianUint32(t *testing.T) {
+func TestUint32LE(t *testing.T) {
 	tests := []struct{ exp, got uint32 }{
-		{exp: 0, got: byteorder.LittleEndian.Uint32([]byte{})},
-		{exp: 0, got: byteorder.LittleEndian.Uint32([]byte{0})},
-		{exp: 256, got: byteorder.LittleEndian.Uint32([]byte{0, 1})},
-		{exp: 1, got: byteorder.LittleEndian.Uint32([]byte{0x01, 0x00})},
-		{exp: 0x4321, got: byteorder.LittleEndian.Uint32([]byte{0x21, 0x43})},
-		{exp: 0x654321, got: byteorder.LittleEndian.Uint32([]byte{0x21, 0x43, 0x65})},
-		{exp: 0x87654321, got: byteorder.LittleEndian.Uint32([]byte{0x21, 0x43, 0x65, 0x87})},
-		{exp: 0x87654321, got: byteorder.LittleEndian.Uint32([]byte{0x21, 0x43, 0x65, 0x87, 0x09})},
+		{exp: 0, got: Uint32LE(string([]byte{}))},
+		{exp: 0, got: Uint32LE(string([]byte{0}))},
+		{exp: 256, got: Uint32LE(string([]byte{0, 1}))},
+		{exp: 1, got: Uint32LE(string([]byte{0x01, 0x00}))},
+		{exp: 0x4321, got: Uint32LE(string([]byte{0x21, 0x43}))},
+		{exp: 0x654321, got: Uint32LE(string([]byte{0x21, 0x43, 0x65}))},
+		{exp: 0x87654321, got: Uint32LE(string([]byte{0x21, 0x43, 0x65, 0x87}))},
+		{exp: 0x87654321, got: Uint32LE(string([]byte{0x21, 0x43, 0x65, 0x87, 0x09}))},
 	}
 	for i, test := range tests {
-		assert.EqualUint32(t, test.exp, test.got, fmt.Sprintf("LittleEndian.Uint32() test:%d", i))
+		assert.EqualUint32(t, test.exp, test.got, fmt.Sprintf("Uint32LE() test:%d", i))
+	}
+}
+
+func Uint32LE(k string) uint32 {
+	switch len(k) {
+	case 0:
+		return 0
+	case 1:
+		return uint32(k[0])
+	case 2:
+		return uint32(k[0]) | uint32(k[1])<<8
+	case 3:
+		return uint32(k[0]) | uint32(k[1])<<8 | uint32(k[2])<<16
+	default:
+		return uint32(k[0]) | uint32(k[1])<<8 | uint32(k[2])<<16 | uint32(k[3])<<24
 	}
 }
 

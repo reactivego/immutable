@@ -2,9 +2,8 @@ package immutable
 
 import (
 	"fmt"
+	"hash/maphash"
 	"strings"
-
-	"github.com/reactivego/immutable/byteorder"
 )
 
 type MapError string
@@ -19,9 +18,14 @@ type Hasher interface {
 	Sum32() uint32
 }
 
-func prefix(key any) uint32 {
+var seed = maphash.MakeSeed()
+
+func hash(key any) uint32 {
 	if k, ok := key.(string); ok {
-		return byteorder.LittleEndian.Uint32([]byte(k))
+		var h maphash.Hash
+		h.SetSeed(seed)
+		h.WriteString(k)
+		return uint32(h.Sum64() & 0xFFFFFFFF)
 	} else if h, ok := key.(Hasher); ok {
 		return h.Sum32()
 	} else {
@@ -29,62 +33,60 @@ func prefix(key any) uint32 {
 	}
 }
 
-type Map struct {
+type Hamt struct {
 	*amt
 }
 
-func NewMap() *Map {
-	return &Map{&amt{}}
+var Map = &Hamt{&amt{}}
+
+func (a *Hamt) Len() int {
+	return a.len()
 }
 
-func (n *Map) Len() int {
-	return n.len()
+func (a *Hamt) Depth() int {
+	return a.depth()
 }
 
-func (n *Map) Depth() int {
-	return n.depth()
+func (a *Hamt) Size() int {
+	return 8 + a.size()
 }
 
-func (n *Map) Size() int {
-	return 8 + n.size()
+func (a *Hamt) Lookup(key any) (any, bool) {
+	return a.get(hash(key), 0, key)
 }
 
-func (n *Map) Lookup(key any) (any, bool) {
-	return n.get(prefix(key), 0, key)
-}
-
-func (n *Map) Get(key any) any {
-	v, _ := n.get(prefix(key), 0, key)
+func (a *Hamt) Get(key any) any {
+	v, _ := a.get(hash(key), 0, key)
 	return v
 }
 
-func (n Map) Put(key, value any) *Map {
-	n.amt = n.put(prefix(key), 0, key, value)
-	return &n
+func (a *Hamt) Range(f func(any, any) bool) {
+	a.foreach(f)
 }
 
-func (n Map) Delete(key any) *Map {
-	n.amt = n.delete(prefix(key), 0, key)
-	return &n
-}
-
-func (n *Map) Range(f func(any, any) bool) {
-	n.foreach(f)
-}
-
-func (n Map) String() string {
+func (a *Hamt) String() string {
 	var b strings.Builder
 	b.WriteByte('{')
-	sep := byte(0)
-	n.amt.foreach(func(k, v any) bool {
-		if sep == 0 {
-			sep = ','
+	sep := ""
+	a.foreach(func(k, v any) bool {
+		if sep == "" {
+			sep = ", "
 		} else {
-			b.WriteByte(sep)
+			b.WriteString(sep)
 		}
 		_, err := fmt.Fprintf(&b, "%#v: %#v", k, v)
 		return err == nil
 	})
 	b.WriteByte('}')
 	return b.String()
+}
+
+func (a Hamt) Put(key, value any) *Hamt {
+	a.amt = a.put(hash(key), 0, key, value)
+	return &a
+}
+
+func (a Hamt) Delete(key any) *Hamt {
+	a.amt = a.delete(hash(key), 0, key)
+	return &a
 }
