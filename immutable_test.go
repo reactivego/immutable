@@ -37,6 +37,10 @@ func TestDelDeep(t *testing.T) {
 	assert.EqualInt(t, 4, t2.Depth(), "t2.Depth()")
 	assert.EqualInt(t, 1, t3.Len(), "t3.Len()")
 	assert.EqualInt(t, 1, t3.Depth(), "t3.Depth()")
+	assert.EqualString(t, v1, t2.Get(k1).(string), "t2.Get(k1)")
+	assert.EqualString(t, v2, t2.Get(k2).(string), "t2.Get(k2)")
+	assert.True(t, t3.Get(k1) == nil, "t3.Get(k1) == nil")
+	assert.EqualString(t, v2, t3.Get(k2).(string), "t3.Get(k2)")
 }
 
 func TestGetDeep(t *testing.T) {
