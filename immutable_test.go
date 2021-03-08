@@ -255,9 +255,13 @@ func TestLittleEndianUint32(t *testing.T) {
 }
 
 func TestSize(t *testing.T) {
-	exp := (&amt{}).size()
-	got := int(unsafe.Sizeof(amt{}))
-	assert.EqualInt(t, exp, got, "unsafe.Sizeof(amt{})")
+	t0 := &amt{}
+	t1 := t0.put(0, 0, "Hello", "World!")
+	assert.EqualInt(t, 32, int(unsafe.Sizeof(amt{})), "unsafe.Sizeof(amt{})")
+	assert.EqualInt(t, 32, t0.size(), "t0.size()")
+	assert.EqualInt(t, 16, int(unsafe.Sizeof(t1.entries[0])), "unsafe.Sizeof(t1.entries[0])")
+	assert.EqualInt(t, 40, int(unsafe.Sizeof(item{})), "unsafe.Sizeof(item{})")
+	assert.EqualInt(t, 32+16+40, t1.size(), "t1.size()")
 }
 
 var assert = struct {
