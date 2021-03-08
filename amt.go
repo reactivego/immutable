@@ -94,9 +94,21 @@ func (n *amt) foreach(f func(key, value any) bool) {
 }
 
 func (n amt) put(prefix uint32, shift uint8, key, value any) *amt {
+	if shift == collision {
+		entries := make([]any, len(n.entries))
+		copy(entries, n.entries)
+		n.entries = entries
+		for index, entry := range n.entries {
+			if e := entry.(item); e.key == key {
+				n.entries[index] = item{prefix: prefix, key: key, value: value}
+				return &n
+			}
+		}
+		n.entries = append(n.entries, item{prefix: prefix, key: key, value: value})
+		return &n
+	}
 	bitpos := uint32(1) << mask(prefix, shift)
 	if present(n.bits, bitpos) {
-		// replace
 		index := index(n.bits, bitpos)
 		e := make([]any, len(n.entries))
 		copy(e, n.entries)
@@ -104,32 +116,18 @@ func (n amt) put(prefix uint32, shift uint8, key, value any) *amt {
 		entrynode := n.entries[index]
 		if entry, ok := entrynode.(item); ok {
 			if entry.prefix == prefix && entry.key == key {
-				// replace
 				n.entries[index] = item{prefix: prefix, key: key, value: value}
 			} else {
-				if entry.prefix == prefix && shift == collision {
-					// prefix collision, replace or insert an entry by enumerating entries
-					for index, entry := range n.entries {
-						if e := entry.(item); e.key == key {
-							n.entries[index] = item{prefix: prefix, key: key, value: value}
-							return &n
-						}
-					}
-					n.entries = append(n.entries, item{prefix: prefix, key: key, value: value})
-				} else {
-					// prefix different or not at collision level, replace entry with node
-					node := &amt{}
-					node = node.put(entry.prefix, shift+nextlevel, entry.key, entry.value)
-					node = node.put(prefix, shift+nextlevel, key, value)
-					n.entries[index] = node
-				}
+				// replace item with a new amt node holding the 2 items
+				node := &amt{}
+				node = node.put(entry.prefix, shift+nextlevel, entry.key, entry.value)
+				n.entries[index] = node.put(prefix, shift+nextlevel, key, value)
 			}
 		} else {
 			node := entrynode.(*amt)
 			n.entries[index] = node.put(prefix, shift+nextlevel, key, value)
 		}
 	} else {
-		// insert
 		index := index(n.bits, bitpos)
 		e := make([]any, len(n.entries)+1)
 		n.bits |= bitpos
@@ -163,7 +161,6 @@ func (n amt) delete(prefix uint32, shift uint8, key any) *amt {
 		d := n.entries[index(n.bits, bitpos)]
 		switch e := d.(type) {
 		case item:
-			// delete
 			index := index(n.bits, bitpos)
 			entries := make([]any, len(n.entries)-1)
 			n.bits &= ^bitpos
