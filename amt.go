@@ -58,6 +58,22 @@ func (n *amt) depth() int {
 	return 1 + depth
 }
 
+func (n *amt) size() int {
+	const amtsize = 32
+	const anysize = 16
+	const itemsize = 40
+	size := amtsize + anysize*len(n.entries)
+	for _, entry := range n.entries {
+		switch e := entry.(type) {
+		case item:
+			size += itemsize
+		case *amt:
+			size += e.size()
+		}
+	}
+	return size
+}
+
 func (n *amt) get(prefix uint32, shift uint8, key any) (any, bool) {
 	if shift == collision {
 		for _, entry := range n.entries {

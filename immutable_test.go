@@ -255,7 +255,7 @@ func TestLittleEndianUint32(t *testing.T) {
 }
 
 func TestSize(t *testing.T) {
-	exp := 32
+	exp := (&amt{}).size()
 	got := int(unsafe.Sizeof(amt{}))
 	assert.EqualInt(t, exp, got, "unsafe.Sizeof(amt{})")
 }
