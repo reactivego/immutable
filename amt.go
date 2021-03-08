@@ -168,7 +168,6 @@ func (n amt) delete(prefix uint32, shift uint8, key any) *amt {
 			copy(entries[index:], n.entries[index+1:])
 			n.entries = entries
 		case *amt:
-			// delete
 			index := index(n.bits, bitpos)
 			entries := make([]any, len(n.entries))
 			copy(entries, n.entries)
