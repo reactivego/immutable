@@ -136,9 +136,9 @@ func (n amt) put(prefix uint32, shift uint8, key, value any) *amt {
 				n.entries[index] = item{prefix: prefix, key: key, value: value}
 			} else {
 				// replace item with a new amt node holding the 2 items
-				node := &amt{}
-				node = node.put(e.prefix, shift+nextlevel, e.key, e.value)
-				n.entries[index] = node.put(prefix, shift+nextlevel, key, value)
+				n.entries[index] = amt{}.
+					put(e.prefix, shift+nextlevel, e.key, e.value).
+					put(prefix, shift+nextlevel, key, value)
 			}
 		case *amt:
 			n.entries[index] = e.put(prefix, shift+nextlevel, key, value)
