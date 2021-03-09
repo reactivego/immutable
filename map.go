@@ -54,38 +54,41 @@ func hash(key any) uint32 {
 	}
 }
 
-type Hamt struct {
-	*amt
-}
+type Hamt struct{ amt }
 
-var Map = &Hamt{&amt{}}
+var Map = Hamt{}
 
-func (a *Hamt) Len() int {
+func (a Hamt) Len() int {
 	return a.len()
 }
 
-func (a *Hamt) Depth() int {
+func (a Hamt) Depth() int {
 	return a.depth()
 }
 
-func (a *Hamt) Size() int {
-	return 8 + a.size()
+func (a Hamt) Size() int {
+	return a.size()
 }
 
-func (a *Hamt) Lookup(key any) (any, bool) {
-	return a.get(hash(key), 0, key)
+func (a Hamt) Lookup(key any) (any, bool) {
+	return a.lookup(hash(key), 0, key)
 }
 
-func (a *Hamt) Get(key any) any {
-	v, _ := a.get(hash(key), 0, key)
+func (a Hamt) Has(key any) bool {
+	_, b := a.lookup(hash(key), 0, key)
+	return b
+}
+
+func (a Hamt) Get(key any) any {
+	v, _ := a.lookup(hash(key), 0, key)
 	return v
 }
 
-func (a *Hamt) Range(f func(any, any) bool) {
+func (a Hamt) Range(f func(any, any) bool) {
 	a.foreach(f)
 }
 
-func (a *Hamt) String() string {
+func (a Hamt) String() string {
 	var b strings.Builder
 	b.WriteByte('{')
 	sep := ""
@@ -102,12 +105,10 @@ func (a *Hamt) String() string {
 	return b.String()
 }
 
-func (a Hamt) Put(key, value any) *Hamt {
-	a.amt = a.put(hash(key), 0, key, value)
-	return &a
+func (a Hamt) Put(key, value any) Hamt {
+	return Hamt{a.put(hash(key), 0, key, value)}
 }
 
-func (a Hamt) Delete(key any) *Hamt {
-	a.amt = a.delete(hash(key), 0, key)
-	return &a
+func (a Hamt) Delete(key any) Hamt {
+	return Hamt{a.delete(hash(key), 0, key)}
 }

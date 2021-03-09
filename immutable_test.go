@@ -238,15 +238,14 @@ func TestSize(t *testing.T) {
 	m1 := m0.Put(TestKey("Hello"), "World!")
 	m2 := m1.Put(TestKey("He11o"), "There!")
 
-	assert.EqualInt(t, 8, int(unsafe.Sizeof(Map)), "unsafe.Sizeof(Map)")
-	assert.EqualInt(t, 8, int(unsafe.Sizeof(*Map)), "unsafe.Sizeof(*Map)")
-	assert.EqualInt(t, 40, m0.Size(), "m0.Size()")
+	assert.EqualInt(t, 32, int(unsafe.Sizeof(Map)), "unsafe.Sizeof(Map)")
+	assert.EqualInt(t, 32, m0.Size(), "m0.Size()")
 
-	assert.EqualInt(t, 96, m1.Size(), "m1.Size()")
+	assert.EqualInt(t, 88, m1.Size(), "m1.Size()")
 
 	assert.EqualInt(t, 2, m2.Len(), "m2.Len()")
 	assert.EqualInt(t, 4, m2.Depth(), "m2.Depth()")
-	assert.EqualInt(t, 8+48+48+48+64+80, m2.Size(), "m2.Size()")
+	assert.EqualInt(t, 48+48+48+64+80, m2.Size(), "m2.Size()")
 }
 
 func TestUint32LE(t *testing.T) {
