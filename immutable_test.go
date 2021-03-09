@@ -129,39 +129,39 @@ func TestBasicPutGetDelete(t *testing.T) {
 func TestEntryPresent(t *testing.T) {
 	tests := []struct{ exp, got bool }{
 		/*0*/
-		{exp: true, got: present(0b0001, bitpos(0))},
-		{exp: true, got: present(0b0010, bitpos(1))},
-		{exp: true, got: present(0b0100, bitpos(2))},
-		{exp: true, got: present(0b1000, bitpos(3))},
-		{exp: false, got: present(0b0010, bitpos(0))},
+		{exp: true, got: present(0b0001, bitpos(0,0))},
+		{exp: true, got: present(0b0010, bitpos(1,0))},
+		{exp: true, got: present(0b0100, bitpos(2,0))},
+		{exp: true, got: present(0b1000, bitpos(3,0))},
+		{exp: false, got: present(0b0010, bitpos(0,0))},
 
 		/*5*/
-		{exp: false, got: present(0b0100, bitpos(0))},
-		{exp: true, got: present(0b0100, bitpos(2))},
-		{exp: false, got: present(0b0100, bitpos(3))},
-		{exp: true, got: present(0b1100, bitpos(3))},
-		{exp: false, got: present(0b10100, bitpos(3))},
+		{exp: false, got: present(0b0100, bitpos(0,0))},
+		{exp: true, got: present(0b0100, bitpos(2,0))},
+		{exp: false, got: present(0b0100, bitpos(3,0))},
+		{exp: true, got: present(0b1100, bitpos(3,0))},
+		{exp: false, got: present(0b10100, bitpos(3,0))},
 
 		/*10*/
-		{exp: true, got: present(0b11100, bitpos(4))},
-		{exp: true, got: present(0b111100, bitpos(4))},
-		{exp: true, got: present(0b111100, bitpos(5))},
-		{exp: true, got: present(0b100100, bitpos(2))},
-		{exp: true, got: present(0b100100, bitpos(5))},
+		{exp: true, got: present(0b11100, bitpos(4,0))},
+		{exp: true, got: present(0b111100, bitpos(4,0))},
+		{exp: true, got: present(0b111100, bitpos(5,0))},
+		{exp: true, got: present(0b100100, bitpos(2,0))},
+		{exp: true, got: present(0b100100, bitpos(5,0))},
 
 		/*15*/
-		{exp: false, got: present(0b1001010, bitpos(0))},
-		{exp: true, got: present(0b1001010, bitpos(1))},
-		{exp: false, got: present(0b1001010, bitpos(2))},
-		{exp: true, got: present(0b1001010, bitpos(3))},
-		{exp: false, got: present(0b1001010, bitpos(4))},
+		{exp: false, got: present(0b1001010, bitpos(0,0))},
+		{exp: true, got: present(0b1001010, bitpos(1,0))},
+		{exp: false, got: present(0b1001010, bitpos(2,0))},
+		{exp: true, got: present(0b1001010, bitpos(3,0))},
+		{exp: false, got: present(0b1001010, bitpos(4,0))},
 
 		/*20*/
-		{exp: false, got: present(0b1001010, bitpos(5))},
-		{exp: true, got: present(0b1001010, bitpos(6))},
-		{exp: false, got: present(0b1001010, bitpos(7))},
-		{exp: false, got: present(0b1001010, bitpos(7))},
-		{exp: false, got: present(0b1001010, bitpos(240))},
+		{exp: false, got: present(0b1001010, bitpos(5,0))},
+		{exp: true, got: present(0b1001010, bitpos(6,0))},
+		{exp: false, got: present(0b1001010, bitpos(7,0))},
+		{exp: false, got: present(0b1001010, bitpos(7,0))},
+		{exp: false, got: present(0b1001010, bitpos(240,0))},
 	}
 	for i, test := range tests {
 		assert.EqualBool(t, test.exp, test.got, fmt.Sprintf("present(n, bitpos(m)) test:%d", i))
@@ -171,57 +171,42 @@ func TestEntryPresent(t *testing.T) {
 func TestEntryIndex(t *testing.T) {
 	tests := []struct{ exp, got int }{
 		/*0*/
-		{exp: 0, got: index(0b0000, bitpos(0))},
-		{exp: 0, got: index(0b0000, bitpos(1))},
-		{exp: 0, got: index(0b0001, bitpos(0))},
-		{exp: 1, got: index(0b0001, bitpos(1))},
-		{exp: 1, got: index(0b0001, bitpos(2))},
+		{exp: 0, got: index(0b0000, bitpos(0,0))},
+		{exp: 0, got: index(0b0000, bitpos(1,0))},
+		{exp: 0, got: index(0b0001, bitpos(0,0))},
+		{exp: 1, got: index(0b0001, bitpos(1,0))},
+		{exp: 1, got: index(0b0001, bitpos(2,0))},
 
 		/*5*/
-		{exp: 0, got: index(0b0100, bitpos(0))},
-		{exp: 0, got: index(0b0100, bitpos(1))},
-		{exp: 0, got: index(0b0100, bitpos(2))},
-		{exp: 1, got: index(0b0100, bitpos(3))},
-		{exp: 1, got: index(0b0100, bitpos(4))},
+		{exp: 0, got: index(0b0100, bitpos(0,0))},
+		{exp: 0, got: index(0b0100, bitpos(1,0))},
+		{exp: 0, got: index(0b0100, bitpos(2,0))},
+		{exp: 1, got: index(0b0100, bitpos(3,0))},
+		{exp: 1, got: index(0b0100, bitpos(4,0))},
 
 		/*10*/
-		{exp: 3, got: index(0b011110, bitpos(4))},
-		{exp: 4, got: index(0b011110, bitpos(5))},
-		{exp: 4, got: index(0b011110, bitpos(6))},
-		{exp: 4, got: index(0b011110, bitpos(7))},
-		{exp: 4, got: index(0b011110, bitpos(31))},
+		{exp: 3, got: index(0b011110, bitpos(4,0))},
+		{exp: 4, got: index(0b011110, bitpos(5,0))},
+		{exp: 4, got: index(0b011110, bitpos(6,0))},
+		{exp: 4, got: index(0b011110, bitpos(7,0))},
+		{exp: 4, got: index(0b011110, bitpos(31,0))},
 
 		/*15*/
-		{exp: 0, got: index(0b1001010, bitpos(0))},
-		{exp: 0, got: index(0b1001010, bitpos(1))},
-		{exp: 1, got: index(0b1001010, bitpos(2))},
-		{exp: 1, got: index(0b1001010, bitpos(3))},
-		{exp: 2, got: index(0b1001010, bitpos(4))},
+		{exp: 0, got: index(0b1001010, bitpos(0,0))},
+		{exp: 0, got: index(0b1001010, bitpos(1,0))},
+		{exp: 1, got: index(0b1001010, bitpos(2,0))},
+		{exp: 1, got: index(0b1001010, bitpos(3,0))},
+		{exp: 2, got: index(0b1001010, bitpos(4,0))},
 
 		/*20*/
-		{exp: 2, got: index(0b1001010, bitpos(5))},
-		{exp: 2, got: index(0b1001010, bitpos(6))},
-		{exp: 3, got: index(0b1001010, bitpos(7))},
-		{exp: 3, got: index(0b1001010, bitpos(9))},
-		{exp: 3, got: index(0b1001010, bitpos(240))},
+		{exp: 2, got: index(0b1001010, bitpos(5,0))},
+		{exp: 2, got: index(0b1001010, bitpos(6,0))},
+		{exp: 3, got: index(0b1001010, bitpos(7,0))},
+		{exp: 3, got: index(0b1001010, bitpos(9,0))},
+		{exp: 3, got: index(0b1001010, bitpos(240,0))},
 	}
 	for i, test := range tests {
 		assert.EqualInt(t, test.exp, test.got, fmt.Sprintf("index() test:%d", i))
-	}
-}
-
-func TestMask(t *testing.T) {
-	tests := []struct{ exp, got uint8 }{
-		{exp: 1, got: mask(0x1, 5*0)},
-		{exp: 16, got: mask(0x10, 5*0)},
-		{exp: 0, got: mask(0x1, 5*1)},
-		{exp: 1, got: mask(0x20, 5*1)},
-		{exp: 1, got: mask(0x40000000, 5*6)},
-		{exp: 2, got: mask(0x80000000, 5*6)},
-		{exp: 3, got: mask(0xC0000000, 5*6)},
-	}
-	for i, test := range tests {
-		assert.EqualUint8(t, test.exp, test.got, fmt.Sprintf("mask() test:%d", i))
 	}
 }
 
