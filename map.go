@@ -12,7 +12,7 @@ func (e MapError) Error() string {
 	return string(e)
 }
 
-const InvalidKeyType = MapError("Invalid Key Type")
+const UnhashableKeyType = MapError("Unhashable Key Type")
 
 type Hasher interface {
 	Sum32() uint32
@@ -21,15 +21,36 @@ type Hasher interface {
 var seed = maphash.MakeSeed()
 
 func hash(key any) uint32 {
-	if k, ok := key.(string); ok {
+	switch k := key.(type) {
+	case string:
 		var h maphash.Hash
 		h.SetSeed(seed)
 		h.WriteString(k)
-		return uint32(h.Sum64() & 0xFFFFFFFF)
-	} else if h, ok := key.(Hasher); ok {
-		return h.Sum32()
-	} else {
-		panic(InvalidKeyType)
+		return uint32(h.Sum64()) & 0xFFFFFFFF
+	case int8:
+		return uint32(k)
+	case uint8:
+		return uint32(k)
+	case int16:
+		return uint32(k)
+	case uint16:
+		return uint32(k)
+	case int32:
+		return uint32(k)
+	case uint32:
+		return k
+	case int64:
+		return uint32(k) & 0xFFFFFFFF
+	case uint64:
+		return uint32(k) & 0xFFFFFFFF
+	case int:
+		return uint32(k) & 0xFFFFFFFF
+	case uint:
+		return uint32(k) & 0xFFFFFFFF
+	case Hasher:
+		return k.Sum32()
+	default:
+		panic(UnhashableKeyType)
 	}
 }
 
