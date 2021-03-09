@@ -79,14 +79,6 @@ func (n *amt) size() int {
 }
 
 func (n *amt) get(prefix uint32, shift uint8, key any) (any, bool) {
-	if shift == collision {
-		for _, entry := range n.entries {
-			if e := entry.(item); e.prefix == prefix && e.key == key {
-				return e.value, true
-			}
-		}
-		return nil, false
-	}
 	bitpos := uint32(1) << mask(prefix, shift)
 	if present(n.bits, bitpos) {
 		switch e := n.entries[index(n.bits, bitpos)].(type) {
@@ -96,6 +88,12 @@ func (n *amt) get(prefix uint32, shift uint8, key any) (any, bool) {
 			}
 		case *amt:
 			return e.get(prefix, shift+nextlevel, key)
+		}
+	} else if shift == collision {
+		for _, entry := range n.entries {
+			if e := entry.(item); e.prefix == prefix && e.key == key {
+				return e.value, true
+			}
 		}
 	}
 	return nil, false
@@ -115,19 +113,6 @@ func (n *amt) foreach(f func(key, value any) bool) {
 }
 
 func (n amt) put(prefix uint32, shift uint8, key, value any) *amt {
-	if shift == collision {
-		entries := make([]any, len(n.entries))
-		copy(entries, n.entries)
-		n.entries = entries
-		for index, entry := range n.entries {
-			if e := entry.(item); e.key == key {
-				n.entries[index] = item{prefix: prefix, key: key, value: value}
-				return &n
-			}
-		}
-		n.entries = append(n.entries, item{prefix: prefix, key: key, value: value})
-		return &n
-	}
 	bitpos := uint32(1) << mask(prefix, shift)
 	if present(n.bits, bitpos) {
 		index := index(n.bits, bitpos)
@@ -147,7 +132,7 @@ func (n amt) put(prefix uint32, shift uint8, key, value any) *amt {
 		case *amt:
 			n.entries[index] = e.put(prefix, shift+nextlevel, key, value)
 		}
-	} else {
+	} else if shift < collision {
 		index := index(n.bits, bitpos)
 		entries := make([]any, len(n.entries)+1)
 		n.bits |= bitpos
@@ -155,27 +140,23 @@ func (n amt) put(prefix uint32, shift uint8, key, value any) *amt {
 		copy(entries[index+1:], n.entries[index:])
 		entries[index] = item{prefix: prefix, key: key, value: value}
 		n.entries = entries
+	} else {
+		entries := make([]any, len(n.entries))
+		copy(entries, n.entries)
+		n.entries = entries
+		for index, entry := range n.entries {
+			if e := entry.(item); e.key == key {
+				n.entries[index] = item{prefix: prefix, key: key, value: value}
+				return &n
+			}
+		}
+		n.entries = append(n.entries, item{prefix: prefix, key: key, value: value})
 	}
+
 	return &n
 }
 
 func (n amt) delete(prefix uint32, shift uint8, key any) *amt {
-	if shift == collision {
-		for index, entry := range n.entries {
-			if e := entry.(item); e.prefix == prefix && e.key == key {
-				if index+1 == len(n.entries) {
-					n.entries = n.entries[:index]
-				} else {
-					entries := make([]any, len(n.entries)-1)
-					copy(entries, n.entries[:index])
-					copy(entries[index:], n.entries[index+1:])
-					n.entries = entries
-				}
-				return &n
-			}
-		}
-		return &n
-	}
 	bitpos := uint32(1) << mask(prefix, shift)
 	if present(n.bits, bitpos) {
 		index := index(n.bits, bitpos)
@@ -198,6 +179,21 @@ func (n amt) delete(prefix uint32, shift uint8, key any) *amt {
 			}
 			n.entries = entries
 		}
+	} else if shift == collision {
+		for index, entry := range n.entries {
+			if e := entry.(item); e.prefix == prefix && e.key == key {
+				if index+1 == len(n.entries) {
+					n.entries = n.entries[:index]
+				} else {
+					entries := make([]any, len(n.entries)-1)
+					copy(entries, n.entries[:index])
+					copy(entries[index:], n.entries[index+1:])
+					n.entries = entries
+				}
+				return &n
+			}
+		}
 	}
+
 	return &n
 }
