@@ -19,17 +19,17 @@ func TestCountries(t *testing.T) {
 	for k, v := range Countries {
 		m = m.Put(k, v)
 	}
+	if len(Countries) != 175 {
+		t.Errorf("len(Countries) got %d expected %d", len(Countries), 175)
+	}
 	if m.Len() != len(Countries) {
-		t.Logf("Expected Len: %d got %d", 175, m.Len())
-		t.Fail()
+		t.Errorf("m.Len() got %d expected %d", m.Len(), len(Countries))
 	}
 	if m.Depth() != 2 {
-		t.Logf("Expected Depth: %d got %d", 2, m.Depth())
-		t.Fail()
+		t.Errorf("m.Depth() got %d expected %d", m.Depth(), 2)
 	}
 	if m.Size() != 11376 {
-		t.Logf("Expected Size: %d got %d", 11376, m.Size())
-		t.Fail()
+		t.Errorf("m.Size() got %d expected %d", m.Size(), 11376)
 	}
 }
 
