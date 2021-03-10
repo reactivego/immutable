@@ -8,8 +8,8 @@ import (
 )
 
 // Bole32 Byte Order Little Endian (32 bits)
-func Bole32(key any) uint32 {
-	return StringBOLE32(key.(string))
+func Bole32(key Any) (uint32, Any) {
+	return StringBOLE32(key.(string)), key
 }
 
 func TestDelDeep(t *testing.T) {
@@ -219,7 +219,7 @@ func TestSize(t *testing.T) {
 	m1 := m0.Put("Hello", "World!")
 	m2 := m1.Put("He11o", "There!")
 
-	assert.EqualInt(t, 40, int(unsafe.Sizeof(Map)), "unsafe.Sizeof(Map)")
+	assert.EqualInt(t, 32, int(unsafe.Sizeof(Map)), "unsafe.Sizeof(Map)")
 	assert.EqualInt(t, 40, m0.Size(), "m0.Size()")
 
 	assert.EqualInt(t, 96, m1.Size(), "m1.Size()")
