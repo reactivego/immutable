@@ -44,7 +44,7 @@ func BenchmarkGoMapSearch(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		c := Countries[i%len(Countries)]
 		if _, present := m[c.Name]; !present {
-			panic("in the disco")
+			b.Errorf("_, present := m[%q]; present expected true got false", c.Name)
 		}
 	}
 	b.ReportAllocs()
@@ -61,7 +61,7 @@ func BenchmarkImmutableMapSearch(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		c := Countries[i%len(Countries)]
 		if !m.Has(c.Name) {
-			panic("in the disco")
+			b.Errorf("m.Has(%q) expected true got false", c.Name)
 		}
 	}
 	b.ReportAllocs()
