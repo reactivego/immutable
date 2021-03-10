@@ -2,7 +2,7 @@ package immutable
 
 import (
 	// "encoding/binary"
-	"fmt"
+
 	"testing"
 	"unsafe"
 )
@@ -31,10 +31,10 @@ func TestDelDeep(t *testing.T) {
 	assert.EqualInt(t, 4, t2.Depth(), "t2.Depth()")
 	assert.EqualInt(t, 1, t3.Len(), "t3.Len()")
 	assert.EqualInt(t, 1, t3.Depth(), "t3.Depth()")
-	assert.EqualString(t, v1, t2.Get(k1).(string), "t2.Get(k1)")
-	assert.EqualString(t, v2, t2.Get(k2).(string), "t2.Get(k2)")
-	assert.True(t, t3.Get(k1) == nil, "t3.Get(k1) == nil")
-	assert.EqualString(t, v2, t3.Get(k2).(string), "t3.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, v2, t3.Get(k2), "t3.Get(k2)")
 }
 
 func TestGetDeep(t *testing.T) {
@@ -48,12 +48,12 @@ func TestGetDeep(t *testing.T) {
 
 	t1 := t0.Put(k1, v1)
 	t2 := t1.Put(k2, v2)
-	r2 := t2.Get(k2).(string)
+	r2 := t2.Get(k2)
 
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
 	assert.EqualInt(t, 2, t2.Len(), "t2.Len()")
 	assert.EqualInt(t, 4, t2.Depth(), "t2.Depth()")
-	assert.EqualString(t, v2, r2, "t2.Get()")
+	assert.Equal(t, v2, r2, "t2.Get(k2)")
 }
 
 func TestGetCollision(t *testing.T) {
@@ -67,12 +67,12 @@ func TestGetCollision(t *testing.T) {
 
 	t1 := t0.Put(k1, v1)
 	t2 := t1.Put(k2, v2)
-	r2 := t2.Get(k2).(string)
+	r2 := t2.Get(k2)
 
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
 	assert.EqualInt(t, 2, t2.Len(), "t2.Len()")
 	assert.EqualInt(t, 8, t2.Depth(), "t2.Depth()")
-	assert.EqualString(t, v2, r2, "t2.Get()")
+	assert.Equal(t, v2, r2, "t2.Get(k2)")
 }
 
 func TestPutCollision(t *testing.T) {
@@ -109,17 +109,15 @@ func TestBasicPutGetDelete(t *testing.T) {
 	t1 := t0.Put(key, val)
 	assert.EqualInt(t, 0, t0.Len(), "t0.Len()")
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
-	got, ok := t1.Get(key).(string)
-	assert.True(t, ok, "t1.Get() expected key %q to be present", key)
-	assert.EqualString(t, val, got, "t1.Get()")
+	got, ok := t1.Lookup(key)
+	assert.Equal(t, true, ok, "_,ok := t1.Lookup(%q); ok", key)
+	assert.Equal(t, val, got, "v,_ := t1.Lookup(%q); v", key)
 	t2 := t1.Delete(key)
 	assert.EqualInt(t, 0, t0.Len(), "t0.Len()")
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
 	assert.EqualInt(t, 0, t2.Len(), "t2.Len()")
-	gotraw := t1.Get(key)
-	assert.True(t, nil != gotraw, "t1.Get() expected key %q to be present", key)
-	gotraw = t2.Get(key)
-	assert.True(t, nil == gotraw, "t2.Get() expected key %q to be removed", key)
+	assert.Equal(t, true, t1.Get(key) != nil, "t1.Get(%q) != nil", key)
+	assert.Equal(t, true, t2.Get(key) == nil, "t2.Get(%q) == nil", key)
 }
 
 func TestEntryPresent(t *testing.T) {
@@ -160,7 +158,7 @@ func TestEntryPresent(t *testing.T) {
 		{exp: false, got: present(0b1001010, bitpos(240, 0))},
 	}
 	for i, test := range tests {
-		assert.EqualBool(t, test.exp, test.got, fmt.Sprintf("present(n, bitpos(m)) test:%d", i))
+		assert.Equal(t, test.exp, test.got, "test #%d", i)
 	}
 }
 
@@ -202,7 +200,7 @@ func TestEntryIndex(t *testing.T) {
 		{exp: 3, got: index(0b1001010, bitpos(240, 0))},
 	}
 	for i, test := range tests {
-		assert.EqualInt(t, test.exp, test.got, fmt.Sprintf("index() test:%d", i))
+		assert.EqualInt(t, test.exp, test.got, "test #%d", i)
 	}
 }
 
@@ -241,7 +239,7 @@ func TestStringBOLE32(t *testing.T) {
 		{exp: 0x87654321, got: StringBOLE32(string([]byte{0x21, 0x43, 0x65, 0x87, 0x09}))},
 	}
 	for i, test := range tests {
-		assert.EqualUint32(t, test.exp, test.got, fmt.Sprintf("StringBOLE32() test:%d", i))
+		assert.Equal(t, test.exp, test.got, "test #%d", i)
 	}
 }
 
@@ -261,47 +259,19 @@ func StringBOLE32(k string) uint32 {
 }
 
 var assert = struct {
-	True        func(t *testing.T, correct bool, msg string, info ...interface{})
-	EqualString func(t *testing.T, exp, got string, msg string)
-	EqualInt    func(t *testing.T, exp, got int, msg string)
-	EqualUint8  func(t *testing.T, exp, got uint8, msg string)
-	EqualUint32 func(t *testing.T, exp, got uint32, msg string)
-	EqualBool   func(t *testing.T, exp, got bool, msg string)
+	Equal    func(t *testing.T, exp, got interface{}, msg string, info ...interface{})
+	EqualInt func(t *testing.T, exp, got int, msg string, info ...interface{})
 }{
-	True: func(t *testing.T, correct bool, msg string, info ...interface{}) {
-		t.Helper()
-		if !correct {
-			t.Errorf(msg, info...)
-		}
-	},
-	EqualString: func(t *testing.T, exp, got string, msg string) {
+	Equal: func(t *testing.T, exp, got interface{}, msg string, info ...interface{}) {
 		t.Helper()
 		if exp != got {
-			t.Errorf(msg+" expected %q got %q", exp, got)
+			t.Errorf(msg+" expected %#v got %#v", append(append(info, exp), got)...)
 		}
 	},
-	EqualInt: func(t *testing.T, exp, got int, msg string) {
+	EqualInt: func(t *testing.T, exp, got int, msg string, info ...interface{}) {
 		t.Helper()
 		if exp != got {
-			t.Errorf(msg+" expected %d got %d", exp, got)
-		}
-	},
-	EqualUint8: func(t *testing.T, exp, got uint8, msg string) {
-		t.Helper()
-		if exp != got {
-			t.Errorf(msg+" expected %d got %d", exp, got)
-		}
-	},
-	EqualUint32: func(t *testing.T, exp, got uint32, msg string) {
-		t.Helper()
-		if exp != got {
-			t.Errorf(msg+" expected %d got %d", exp, got)
-		}
-	},
-	EqualBool: func(t *testing.T, exp, got bool, msg string) {
-		t.Helper()
-		if exp != got {
-			t.Errorf(msg+" expected %t got %t", exp, got)
+			t.Errorf(msg+" expected %d got %d", append(append(info, exp), got)...)
 		}
 	},
 }
