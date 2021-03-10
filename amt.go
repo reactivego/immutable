@@ -114,7 +114,7 @@ func (n amt) foreach(f func(key, value any) bool) {
 	}
 }
 
-func (n amt) String() string {
+func (n amt) string() string {
 	var b strings.Builder
 	b.WriteByte('{')
 	sep := ""
@@ -124,7 +124,7 @@ func (n amt) String() string {
 		} else {
 			b.WriteString(sep)
 		}
-		_, err := fmt.Fprintf(&b, "%#v: %#v", k, v)
+		_, err := fmt.Fprintf(&b, "%#v:%#v", k, v)
 		return err == nil
 	})
 	b.WriteByte('}')
