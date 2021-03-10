@@ -1,21 +1,10 @@
 package immutable
 
-import "math/bits"
-
-const collision = 35
-const nextlevel = 5
-
-func bitpos(prefix uint32, shift uint8) uint32 {
-	return 1 << (prefix >> shift & 0x1f)
-}
-
-func index(bitmap uint32, bitpos uint32) int {
-	return bits.OnesCount32(bitmap & (bitpos - 1))
-}
-
-func present(bitmap uint32, bitpos uint32) bool {
-	return bitmap&bitpos != 0
-}
+import (
+	"fmt"
+	"math/bits"
+	"strings"
+)
 
 // any takes 16 bytes on 64bit archs
 type any = interface{}
@@ -31,6 +20,21 @@ type item struct {
 	prefix uint32 // 8 bytes on 64bit archs
 	key    any    // 16 bytes on 64bit archs
 	value  any    // 16 bytes on 64bit archs
+}
+
+const collision = 35
+const nextlevel = 5
+
+func bitpos(prefix uint32, shift uint8) uint32 {
+	return 1 << (prefix >> shift & 0x1f)
+}
+
+func index(bitmap uint32, bitpos uint32) int {
+	return bits.OnesCount32(bitmap & (bitpos - 1))
+}
+
+func present(bitmap uint32, bitpos uint32) bool {
+	return bitmap&bitpos != 0
 }
 
 func (n amt) len() int {
@@ -108,6 +112,23 @@ func (n amt) foreach(f func(key, value any) bool) {
 			e.foreach(f)
 		}
 	}
+}
+
+func (n amt) String() string {
+	var b strings.Builder
+	b.WriteByte('{')
+	sep := ""
+	n.foreach(func(k, v any) bool {
+		if sep == "" {
+			sep = ", "
+		} else {
+			b.WriteString(sep)
+		}
+		_, err := fmt.Fprintf(&b, "%#v: %#v", k, v)
+		return err == nil
+	})
+	b.WriteByte('}')
+	return b.String()
 }
 
 func (n amt) put(prefix uint32, shift uint8, key, value any) amt {
