@@ -68,26 +68,26 @@ func BenchmarkImmutableMapSearch(b *testing.B) {
 }
 
 func BenchmarkGoMapStringString(b *testing.B) {
-	clen := len(Countries)
 	var m map[string]string
+	count := len(Countries)
 	for i := 0; i < b.N; i++ {
-		if i%clen == 0 {
+		if i%count == 0 {
 			m = map[string]string{}
 		}
-		c := Countries[i%clen]
+		c := Countries[i%count]
 		m[c.Name] = c.Code
 	}
 	b.ReportAllocs()
 }
 
 func BenchmarkImmutableMapStringString(b *testing.B) {
-	clen := len(Countries)
 	m := immutable.Map
+	count := len(Countries)
 	for i := 0; i < b.N; i++ {
-		if i%clen == 0 {
+		if i%count == 0 {
 			m = immutable.Map
 		}
-		c := Countries[i%clen]
+		c := Countries[i%count]
 		m = m.Put(c.Name, c.Code)
 	}
 	b.ReportAllocs()
