@@ -38,13 +38,13 @@ func present(bitmap uint32, bitpos uint32) bool {
 }
 
 func (n amt) len() int {
-	size := len(n.entries)
+	len := len(n.entries)
 	for _, entry := range n.entries {
 		if e, ok := entry.(amt); ok {
-			size += e.len() - 1
+			len += e.len() - 1
 		}
 	}
-	return size
+	return len
 }
 
 func (n amt) depth() int {
