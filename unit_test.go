@@ -51,6 +51,33 @@ func TestGetDeep(t *testing.T) {
 	assert.Equal(t, v2, r2, "t2.Get(k2)")
 }
 
+func TestPutDeep(t *testing.T) {
+	t0 := Map.WithHasher(Bole32)
+
+	k1 := "He1lo"
+	v1 := "World!"
+
+	k2 := "He2lo"
+	v2 := "There!"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t1.Put(k1, v2)
+
+	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
+	assert.EqualInt(t, 1, t1.Depth(), "t1.Depth()")
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+
+	assert.EqualInt(t, 2, t2.Len(), "t2.Len()")
+	assert.EqualInt(t, 4, t2.Depth(), "t2.Depth()")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+
+	assert.EqualInt(t, 1, t3.Len(), "t3.Len()")
+	assert.EqualInt(t, 1, t3.Depth(), "t3.Depth()")
+	assert.Equal(t, v2, t3.Get(k1), "t3.Get(k1)")
+}
+
 func TestDelCollision(t *testing.T) {
 	t0 := Map.WithHasher(Bole32)
 
