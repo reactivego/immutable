@@ -115,7 +115,15 @@ func TestBasicPutGetDelete(t *testing.T) {
 	assert.Equal(t, true, t2.Get(key) == nil, "t2.Get(%q) == nil", key)
 }
 
-func TestEntryPresent(t *testing.T) {
+func TestStringer(t *testing.T) {
+	m := Map.Put("Hello", "World!")
+	x := Map.WithHasher(Bole32).Put("Hello", "World!").Put("Hi","There!")
+
+	assert.EqualString(t, `Hamt{"Hello":"World!"}`, m.String(), "m.String()")
+	assert.EqualString(t, `HamtX{"Hello":"World!", "Hi":"There!"}`, x.String(), "x.String()")
+}
+
+func TestPresent(t *testing.T) {
 	tests := []struct{ exp, got bool }{
 		/*0*/
 		{exp: true, got: present(0b0001, bitpos(0, 0))},
@@ -281,6 +289,12 @@ var assert = struct {
 		t.Helper()
 		if exp != got {
 			t.Errorf(msg+" expected %d got %d", append(append(info, exp), got)...)
+		}
+	},
+	EqualString: func(t *testing.T, exp, got string, msg string, info ...interface{}) {
+		t.Helper()
+		if exp != got {
+			t.Errorf(msg+" expected %#q got %#q", append(append(info, exp), got)...)
 		}
 	},
 }
