@@ -190,7 +190,7 @@ func (n amt) delete(prefix uint32, shift uint8, key any) amt {
 		case amt:
 			entries := make([]any, len(n.entries))
 			copy(entries, n.entries)
-			if e = e.delete(prefix, shift+nextlevel, key); len(e.entries) == 1 {
+			if e = e.delete(prefix, shift+nextlevel, key); e.len() == 1 {
 				entries[index] = e.entries[0]
 			} else {
 				entries[index] = e

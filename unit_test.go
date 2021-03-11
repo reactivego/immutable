@@ -18,7 +18,7 @@ func TestDelDeep(t *testing.T) {
 
 	t1 := t0.Put(k1, v1)
 	t2 := t1.Put(k2, v2)
-	t3 := t2.Delete(k1)
+	t3 := t2.Del(k1)
 
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
 	assert.EqualInt(t, 1, t1.Depth(), "t1.Depth()")
@@ -49,6 +49,52 @@ func TestGetDeep(t *testing.T) {
 	assert.EqualInt(t, 2, t2.Len(), "t2.Len()")
 	assert.EqualInt(t, 4, t2.Depth(), "t2.Depth()")
 	assert.Equal(t, v2, r2, "t2.Get(k2)")
+}
+
+func TestDelCollision(t *testing.T) {
+	t0 := Map.WithHasher(Bole32)
+
+	k1 := "Hello1"
+	v1 := "World!"
+
+	k2 := "Hello2"
+	v2 := "There!"
+
+	k3 := "Hello3"
+	v3 := "Gophers!"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Del(k2)
+	t4 := t2.Del(k1)
+	t5 := t2.Put(k3, v3)
+	t6 := t5.Del(k2)
+
+	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
+
+	assert.EqualInt(t, 2, t2.Len(), "t2.Len()")
+	assert.EqualInt(t, 8, t2.Depth(), "t2.Depth()")
+	assert.Equal(t, true, t2.Has(k1), "t2.Has(k1)")
+	assert.Equal(t, true, t2.Has(k2), "t2.Has(k2)")
+
+	assert.EqualInt(t, 1, t3.Depth(), "t3.Depth()")
+	assert.Equal(t, true, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, false, t3.Has(k2), "t3.Has(k2)")
+
+	assert.EqualInt(t, 1, t4.Depth(), "t4.Depth()")
+	assert.Equal(t, false, t4.Has(k1), "t4.Has(k1)")
+	assert.Equal(t, true, t4.Has(k2), "t4.Has(k2)")
+
+	assert.EqualInt(t, 8, t5.Depth(), "t5.Depth()")
+	assert.Equal(t, v1, t5.Get(k1), "t5.Get(k1)")
+	assert.Equal(t, v2, t5.Get(k2), "t5.Get(k2)")
+	assert.Equal(t, v3, t5.Get(k3), "t5.Get(k3)")
+
+	assert.EqualInt(t, 2, t6.Len(), "t6.Len()")
+	assert.EqualInt(t, 8, t6.Depth(), "t6.Depth()")
+	assert.Equal(t, v1, t6.Get(k1), "t6.Get(k1)")
+	assert.Equal(t, false, t6.Has(k2), "t6.Has(k2)")
+	assert.Equal(t, v3, t6.Get(k3), "t6.Get(k3)")
 }
 
 func TestGetCollision(t *testing.T) {
@@ -95,7 +141,7 @@ func TestPutCollision(t *testing.T) {
 	assert.EqualInt(t, 3, t4.Len(), "t4.Len()")
 }
 
-func TestBasicPutGetDelete(t *testing.T) {
+func TestPutGetDel(t *testing.T) {
 	t0 := Map.WithHasher(Bole32)
 
 	key := "hello"
@@ -107,7 +153,7 @@ func TestBasicPutGetDelete(t *testing.T) {
 	got, ok := t1.Lookup(key)
 	assert.Equal(t, true, ok, "_,ok := t1.Lookup(%q); ok", key)
 	assert.Equal(t, val, got, "v,_ := t1.Lookup(%q); v", key)
-	t2 := t1.Delete(key)
+	t2 := t1.Del(key)
 	assert.EqualInt(t, 0, t0.Len(), "t0.Len()")
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
 	assert.EqualInt(t, 0, t2.Len(), "t2.Len()")
