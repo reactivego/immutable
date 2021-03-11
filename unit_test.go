@@ -7,11 +7,6 @@ import (
 	"unsafe"
 )
 
-// Bole32 Byte Order Little Endian (32 bits)
-func Bole32(key Any) (uint32, Any) {
-	return StringBOLE32(key.(string)), key
-}
-
 func TestDelDeep(t *testing.T) {
 	t0 := Map.WithHasher(Bole32)
 
@@ -227,40 +222,54 @@ func TestSize(t *testing.T) {
 	assert.EqualInt(t, 8+48+48+48+64+80, m2.Size(), "m2.Size()")
 }
 
-func TestStringBOLE32(t *testing.T) {
+func TestBole32(t *testing.T) {
+	h := func(h uint32, k Any) uint32 {
+		return h
+	}
 	tests := []struct{ exp, got uint32 }{
-		{exp: 0, got: StringBOLE32(string([]byte{}))},
-		{exp: 0, got: StringBOLE32(string([]byte{0}))},
-		{exp: 256, got: StringBOLE32(string([]byte{0, 1}))},
-		{exp: 1, got: StringBOLE32(string([]byte{0x01, 0x00}))},
-		{exp: 0x4321, got: StringBOLE32(string([]byte{0x21, 0x43}))},
-		{exp: 0x654321, got: StringBOLE32(string([]byte{0x21, 0x43, 0x65}))},
-		{exp: 0x87654321, got: StringBOLE32(string([]byte{0x21, 0x43, 0x65, 0x87}))},
-		{exp: 0x87654321, got: StringBOLE32(string([]byte{0x21, 0x43, 0x65, 0x87, 0x09}))},
+		{exp: 0, got: h(Bole32(string([]byte{})))},
+		{exp: 0, got: h(Bole32(string([]byte{0})))},
+		{exp: 256, got: h(Bole32(string([]byte{0, 1})))},
+		{exp: 1, got: h(Bole32(string([]byte{0x01, 0x00})))},
+		{exp: 0x4321, got: h(Bole32(string([]byte{0x21, 0x43})))},
+		{exp: 0x654321, got: h(Bole32(string([]byte{0x21, 0x43, 0x65})))},
+		{exp: 0x87654321, got: h(Bole32(string([]byte{0x21, 0x43, 0x65, 0x87})))},
+		{exp: 0x87654321, got: h(Bole32(string([]byte{0x21, 0x43, 0x65, 0x87, 0x09})))},
 	}
 	for i, test := range tests {
 		assert.Equal(t, test.exp, test.got, "test #%d", i)
 	}
+
+	hash, _ := Bole32([]byte{1, 2, 3})
+	assert.EqualInt(t, 0, int(hash), "hash, _ := Bole32(); hash")
 }
 
-func StringBOLE32(k string) uint32 {
-	switch len(k) {
-	case 0:
-		return 0
-	case 1:
-		return uint32(k[0])
-	case 2:
-		return uint32(k[0]) | uint32(k[1])<<8
-	case 3:
-		return uint32(k[0]) | uint32(k[1])<<8 | uint32(k[2])<<16
+// Bole32 returns the head of a string as a uint32 in Little Endian Byte
+// Order.
+func Bole32(key Any) (uint32, Any) {
+	switch k := key.(type) {
+	case string:
+		switch len(k) {
+		case 0:
+			return 0, key
+		case 1:
+			return uint32(k[0]), key
+		case 2:
+			return uint32(k[0]) | uint32(k[1])<<8, key
+		case 3:
+			return uint32(k[0]) | uint32(k[1])<<8 | uint32(k[2])<<16, key
+		default:
+			return uint32(k[0]) | uint32(k[1])<<8 | uint32(k[2])<<16 | uint32(k[3])<<24, key
+		}
 	default:
-		return uint32(k[0]) | uint32(k[1])<<8 | uint32(k[2])<<16 | uint32(k[3])<<24
+		return 0, key
 	}
 }
 
 var assert = struct {
-	Equal    func(t *testing.T, exp, got interface{}, msg string, info ...interface{})
-	EqualInt func(t *testing.T, exp, got int, msg string, info ...interface{})
+	Equal       func(t *testing.T, exp, got interface{}, msg string, info ...interface{})
+	EqualInt    func(t *testing.T, exp, got int, msg string, info ...interface{})
+	EqualString func(t *testing.T, exp, got string, msg string, info ...interface{})
 }{
 	Equal: func(t *testing.T, exp, got interface{}, msg string, info ...interface{}) {
 		t.Helper()
