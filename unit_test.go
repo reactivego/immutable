@@ -165,7 +165,7 @@ func TestPresent(t *testing.T) {
 	}
 }
 
-func TestEntryIndex(t *testing.T) {
+func TestIndex(t *testing.T) {
 	tests := []struct{ exp, got int }{
 		/*0*/
 		{exp: 0, got: index(0b0000, bitpos(0, 0))},
