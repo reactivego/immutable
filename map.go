@@ -95,7 +95,7 @@ func (a Hamt) Set(key Any) Hamt {
 	return Hamt{a.put(hash(key), 0, key, nil)}
 }
 
-func (a Hamt) Delete(key Any) Hamt {
+func (a Hamt) Del(key Any) Hamt {
 	return Hamt{a.delete(hash(key), 0, key)}
 }
 
@@ -156,7 +156,7 @@ func (a HamtX) Set(key Any) HamtX {
 	return HamtX{a.put(h, 0, k, nil), a.hash}
 }
 
-func (a HamtX) Delete(key Any) HamtX {
+func (a HamtX) Del(key Any) HamtX {
 	h, k := a.hash(key)
 	return HamtX{a.delete(h, 0, k), a.hash}
 }
