@@ -99,8 +99,8 @@ func (a Hamt) Del(key Any) Hamt {
 	return Hamt{a.delete(hash(key), 0, key)}
 }
 
-func (a Hamt) WithHasher(h func(Any) (uint32, Any)) HamtX {
-	return HamtX{a.amt, h}
+func (a Hamt) WithHasher(hash func(Any) (uint32, Any)) HamtX {
+	return HamtX{hash: hash}
 }
 
 // HamtX is a Hash Array Mapped Trie with an eXternal hash function.
@@ -159,8 +159,4 @@ func (a HamtX) Set(key Any) HamtX {
 func (a HamtX) Del(key Any) HamtX {
 	h, k := a.hash(key)
 	return HamtX{a.delete(h, 0, k), a.hash}
-}
-
-func (a HamtX) WithHasher(h func(Any) (uint32, Any)) HamtX {
-	return HamtX{a.amt, h}
 }
