@@ -193,24 +193,282 @@ func TestRange(t *testing.T) {
 	k2 := "He11o"
 	v2 := "There!"
 
-
-	t1 := t0.Put(k1,v1)
-	t2 := t1.Put(k2,v2)
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
 
 	c1 := 0
-	t1.Range(func(key,value Any) bool {
+	t1.Range(func(key, value Any) bool {
 		c1 += 1
 		return key != k2
 	})
 
 	c2 := 0
-	t2.Range(func(key,value Any) bool {
+	t2.Range(func(key, value Any) bool {
 		c2 += 1
 		return key != k1
 	})
 
 	assert.EqualInt(t, 1, c1, "t1.Range()")
 	assert.EqualInt(t, 2, c2, "t2.Range()")
+}
+
+func TestSet(t *testing.T) {
+	s0 := Map
+
+	k1 := "first"
+	k2 := "second"
+	k3 := "third"
+	k4 := "fourth"
+
+	s1 := s0.Set(k1)
+	s2 := s1.Set(k2)
+	s3 := s2.Set(k3)
+
+
+	x0 := Map.WithHasher(Bole32)
+	x1 := x0.Set(k1)
+	x2 := x1.Set(k2)
+	x3 := x2.Set(k3)
+
+	assert.Equal(t, true, s3.Has(k1), "s3.Has(k1)")
+	assert.Equal(t, true, s3.Has(k2), "s3.Has(k2)")
+	assert.Equal(t, true, s3.Has(k3), "s3.Has(k3)")
+	assert.Equal(t, false, s3.Has(k4), "s3.Has(k4)")
+
+	assert.Equal(t, true, x3.Has(k1), "x3.Has(k1)")
+	assert.Equal(t, true, x3.Has(k2), "x3.Has(k2)")
+	assert.Equal(t, true, x3.Has(k3), "x3.Has(k3)")
+	assert.Equal(t, false, x3.Has(k4), "x3.Has(k4)")
+}
+
+func TestUnhashableKey(t *testing.T) {
+	defer func() {
+		assert.Equal(t, UnhashableKeyType, recover(), "err == UnhashableKeyType")
+	}()
+	assert.Equal(t, "Unhashable Key Type", UnhashableKeyType.Error(), "err == UnhashableKeyType")
+	Map.Put(struct{ id int }{123}, 456)
+	assert.Equal(t, false, true, "Unreachable")
+}
+
+func TestPutGetDelInt(t *testing.T) {
+	t0 := Map
+
+	k1 := uint(120120)
+	v1 := "value1"
+
+	k2 := int(120120)
+	v2 := "value2"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Del(k1)
+
+	count := 0
+	t2.Range(func(key, value Any) bool {
+		count++
+		return true
+	})
+	assert.Equal(t, count, 2, "t2.Range()")
+
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
+
+	val, ok := t3.Lookup(k2)
+	assert.Equal(t, true, ok, "_, ok := t3.Lookup(k2)")
+	assert.Equal(t, v2, val, "val, _ := t3.Lookup(k2)")
+}
+
+func TestPutGetDelUint64(t *testing.T) {
+	t0 := Map
+
+	k1 := uint64(120120)
+	v1 := "value1"
+
+	k2 := uint64(240240)
+	v2 := "value2"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Del(k1)
+
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
+}
+
+func TestPutGetDelInt64(t *testing.T) {
+	t0 := Map
+
+	k1 := int64(120120)
+	v1 := "value1"
+
+	k2 := int64(-120120)
+	v2 := "value2"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Del(k1)
+
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
+}
+
+func TestPutGetDelUint32(t *testing.T) {
+	t0 := Map
+
+	k1 := uint32(120)
+	v1 := "value1"
+
+	k2 := uint32(240)
+	v2 := "value2"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Del(k1)
+
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
+}
+
+func TestPutGetDelInt32(t *testing.T) {
+	t0 := Map
+
+	k1 := int32(120)
+	v1 := "value1"
+
+	k2 := int32(-120)
+	v2 := "value2"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Del(k1)
+
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
+}
+
+func TestPutGetDelUint16(t *testing.T) {
+	t0 := Map
+
+	k1 := uint16(120)
+	v1 := "value1"
+
+	k2 := uint16(240)
+	v2 := "value2"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Del(k1)
+
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
+}
+
+func TestPutGetDelInt16(t *testing.T) {
+	t0 := Map
+
+	k1 := int16(120)
+	v1 := "value1"
+
+	k2 := int16(-120)
+	v2 := "value2"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Del(k1)
+
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
+}
+
+func TestPutGetDelUint8(t *testing.T) {
+	t0 := Map
+
+	k1 := uint8(120)
+	v1 := "value1"
+
+	k2 := uint8(240)
+	v2 := "value2"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Del(k1)
+
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
+}
+
+func TestPutGetDelInt8(t *testing.T) {
+	t0 := Map
+
+	k1 := int8(120)
+	v1 := "value1"
+
+	k2 := int8(-120)
+	v2 := "value2"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Del(k1)
+
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
+}
+
+func TestPutGetDelString(t *testing.T) {
+	t0 := Map
+
+	k1 := "First Key"
+	v1 := "value1"
+
+	k2 := "Second Key"
+	v2 := "value2"
+
+	t1 := t0.Put(k1, v1)
+	t2 := t1.Put(k2, v2)
+	t3 := t2.Del(k1)
+
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
 }
 
 func TestPutGetDel(t *testing.T) {
@@ -235,7 +493,7 @@ func TestPutGetDel(t *testing.T) {
 
 func TestStringer(t *testing.T) {
 	m := Map.Put("Hello", "World!")
-	x := Map.WithHasher(Bole32).Put("Hello", "World!").Put("Hi","There!")
+	x := Map.WithHasher(Bole32).Put("Hello", "World!").Put("Hi", "There!")
 
 	assert.EqualString(t, `Hamt{"Hello":"World!"}`, m.String(), "m.String()")
 	assert.EqualString(t, `HamtX{"Hello":"World!", "Hi":"There!"}`, x.String(), "x.String()")
