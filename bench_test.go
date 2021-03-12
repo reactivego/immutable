@@ -33,7 +33,7 @@ func TestCountries(t *testing.T) {
 	}
 }
 
-func BenchmarkGoMapSearch(b *testing.B) {
+func BenchmarkGoMapGet(b *testing.B) {
 	m := map[string]string{}
 	func() {
 		b.Helper()
@@ -50,7 +50,7 @@ func BenchmarkGoMapSearch(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func BenchmarkImmutableMapSearch(b *testing.B) {
+func BenchmarkImmutableMapGet(b *testing.B) {
 	m := immutable.Map
 	func() {
 		b.Helper()
@@ -67,7 +67,7 @@ func BenchmarkImmutableMapSearch(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func BenchmarkGoMapStringString(b *testing.B) {
+func BenchmarkGoMapPut(b *testing.B) {
 	var m map[string]string
 	count := len(Countries)
 	for i := 0; i < b.N; i++ {
@@ -80,7 +80,10 @@ func BenchmarkGoMapStringString(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func BenchmarkImmutableMapStringString(b *testing.B) {
+func BenchmarkImmutableMapPut(b *testing.B) {
+	// var ss, es runtime.MemStats
+	// runtime.ReadMemStats(&ss)
+	// MapAlloc := uint64(0)
 	m := immutable.Map
 	count := len(Countries)
 	for i := 0; i < b.N; i++ {
@@ -89,7 +92,11 @@ func BenchmarkImmutableMapStringString(b *testing.B) {
 		}
 		c := Countries[i%count]
 		m = m.Put(c.Name, c.Code)
+		// MapAlloc += uint64(m.Size())
 	}
+	// runtime.ReadMemStats(&es)
+	// b.ReportMetric(float64(MapAlloc)/float64(es.TotalAlloc-ss.TotalAlloc), "MapAlloc/TotalAlloc")
+	// b.ReportMetric(float64(es.HeapAlloc-ss.HeapAlloc)/float64(b.N), "HeapAllocBytes/op")
 	b.ReportAllocs()
 }
 
