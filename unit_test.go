@@ -146,10 +146,10 @@ func TestGetCollision(t *testing.T) {
 func TestPutCollision(t *testing.T) {
 	t0 := Map.WithHasher(Bole32)
 
-	k1 := "Hello"
+	k1 := "Hello1"
 	v1 := "World!"
 
-	k2 := k1
+	k2 := "Hello2"
 	v2 := "There!"
 
 	k3 := "Hela"
@@ -159,13 +159,58 @@ func TestPutCollision(t *testing.T) {
 	v4 := "Strange!"
 
 	t1 := t0.Put(k1, v1)
-	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
 	t2 := t1.Put(k2, v2)
-	assert.EqualInt(t, 1, t2.Len(), "t2.Len()")
 	t3 := t2.Put(k3, v3)
-	assert.EqualInt(t, 2, t3.Len(), "t3.Len()")
 	t4 := t3.Put(k4, v4)
-	assert.EqualInt(t, 3, t4.Len(), "t4.Len()")
+	t5 := t4.Put(k1, v2)
+
+	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
+	assert.EqualInt(t, 1, t1.Depth(), "t1.Depth()")
+
+	assert.EqualInt(t, 2, t2.Len(), "t2.Len()")
+	assert.EqualInt(t, 8, t2.Depth(), "t2.Depth()")
+
+	assert.EqualInt(t, 3, t3.Len(), "t3.Len()")
+	assert.EqualInt(t, 8, t3.Depth(), "t3.Depth()")
+
+	assert.EqualInt(t, 4, t4.Len(), "t4.Len()")
+	assert.EqualInt(t, 8, t4.Depth(), "t4.Depth()")
+
+	assert.EqualInt(t, 4, t5.Len(), "t5.Len()")
+	assert.EqualInt(t, 8, t5.Depth(), "t5.Depth()")
+	assert.Equal(t, v2, t5.Get(k1), "t5.Get(k1)")
+	assert.Equal(t, v2, t5.Get(k2), "t5.Get(k2)")
+	assert.Equal(t, v3, t5.Get(k3), "t5.Get(k3)")
+	assert.Equal(t, v4, t5.Get(k4), "t5.Get(k4)")
+}
+
+func TestRange(t *testing.T) {
+	t0 := Map.WithHasher(Bole32)
+
+	k1 := "Hello"
+	v1 := "World!"
+
+	k2 := "He11o"
+	v2 := "There!"
+
+
+	t1 := t0.Put(k1,v1)
+	t2 := t1.Put(k2,v2)
+
+	c1 := 0
+	t1.Range(func(key,value Any) bool {
+		c1 += 1
+		return key != k2
+	})
+
+	c2 := 0
+	t2.Range(func(key,value Any) bool {
+		c2 += 1
+		return key != k1
+	})
+
+	assert.EqualInt(t, 1, c1, "t1.Range()")
+	assert.EqualInt(t, 2, c2, "t2.Range()")
 }
 
 func TestPutGetDel(t *testing.T) {
