@@ -16,8 +16,8 @@ func TestDelDeep(t *testing.T) {
 	k2 := "He2lo"
 	v2 := "There!"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k1)
 
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
@@ -41,8 +41,8 @@ func TestGetDeep(t *testing.T) {
 	k2 := "He2lo"
 	v2 := "There!"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	r2 := t2.Get(k2)
 
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
@@ -60,9 +60,9 @@ func TestPutDeep(t *testing.T) {
 	k2 := "He2lo"
 	v2 := "There!"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
-	t3 := t1.Put(k1, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
+	t3 := t1.Set(k1, v2)
 
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
 	assert.EqualInt(t, 1, t1.Depth(), "t1.Depth()")
@@ -90,11 +90,11 @@ func TestDelCollision(t *testing.T) {
 	k3 := "Hello3"
 	v3 := "Gophers!"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k2)
 	t4 := t2.Del(k1)
-	t5 := t2.Put(k3, v3)
+	t5 := t2.Set(k3, v3)
 	t6 := t5.Del(k2)
 
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
@@ -133,8 +133,8 @@ func TestGetCollision(t *testing.T) {
 	k2 := "Hello2"
 	v2 := "There!"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	r2 := t2.Get(k2)
 
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
@@ -158,11 +158,11 @@ func TestPutCollision(t *testing.T) {
 	k4 := "Hella"
 	v4 := "Strange!"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
-	t3 := t2.Put(k3, v3)
-	t4 := t3.Put(k4, v4)
-	t5 := t4.Put(k1, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
+	t3 := t2.Set(k3, v3)
+	t4 := t3.Set(k4, v4)
+	t5 := t4.Set(k1, v2)
 
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
 	assert.EqualInt(t, 1, t1.Depth(), "t1.Depth()")
@@ -193,8 +193,8 @@ func TestRange(t *testing.T) {
 	k2 := "He11o"
 	v2 := "There!"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 
 	c1 := 0
 	t1.Range(func(key, value Any) bool {
@@ -220,15 +220,15 @@ func TestSet(t *testing.T) {
 	k3 := "third"
 	k4 := "fourth"
 
-	s1 := s0.Set(k1)
-	s2 := s1.Set(k2)
-	s3 := s2.Set(k3)
+	s1 := s0.Put(k1)
+	s2 := s1.Put(k2)
+	s3 := s2.Put(k3)
 
 
 	x0 := Map.WithHasher(Bole32)
-	x1 := x0.Set(k1)
-	x2 := x1.Set(k2)
-	x3 := x2.Set(k3)
+	x1 := x0.Put(k1)
+	x2 := x1.Put(k2)
+	x3 := x2.Put(k3)
 
 	assert.Equal(t, true, s3.Has(k1), "s3.Has(k1)")
 	assert.Equal(t, true, s3.Has(k2), "s3.Has(k2)")
@@ -246,7 +246,7 @@ func TestUnhashableKey(t *testing.T) {
 		assert.Equal(t, UnhashableKeyType, recover(), "err == UnhashableKeyType")
 	}()
 	assert.Equal(t, "Unhashable Key Type", UnhashableKeyType.Error(), "err == UnhashableKeyType")
-	Map.Put(struct{ id int }{123}, 456)
+	Map.Set(struct{ id int }{123}, 456)
 	assert.Equal(t, false, true, "Unreachable")
 }
 
@@ -259,8 +259,8 @@ func TestPutGetDelInt(t *testing.T) {
 	k2 := int(120120)
 	v2 := "value2"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k1)
 
 	count := 0
@@ -291,8 +291,8 @@ func TestPutGetDelUint64(t *testing.T) {
 	k2 := uint64(240240)
 	v2 := "value2"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
@@ -312,8 +312,8 @@ func TestPutGetDelInt64(t *testing.T) {
 	k2 := int64(-120120)
 	v2 := "value2"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
@@ -333,8 +333,8 @@ func TestPutGetDelUint32(t *testing.T) {
 	k2 := uint32(240)
 	v2 := "value2"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
@@ -354,8 +354,8 @@ func TestPutGetDelInt32(t *testing.T) {
 	k2 := int32(-120)
 	v2 := "value2"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
@@ -375,8 +375,8 @@ func TestPutGetDelUint16(t *testing.T) {
 	k2 := uint16(240)
 	v2 := "value2"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
@@ -396,8 +396,8 @@ func TestPutGetDelInt16(t *testing.T) {
 	k2 := int16(-120)
 	v2 := "value2"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
@@ -417,8 +417,8 @@ func TestPutGetDelUint8(t *testing.T) {
 	k2 := uint8(240)
 	v2 := "value2"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
@@ -438,8 +438,8 @@ func TestPutGetDelInt8(t *testing.T) {
 	k2 := int8(-120)
 	v2 := "value2"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
@@ -459,8 +459,8 @@ func TestPutGetDelString(t *testing.T) {
 	k2 := "Second Key"
 	v2 := "value2"
 
-	t1 := t0.Put(k1, v1)
-	t2 := t1.Put(k2, v2)
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
@@ -477,7 +477,7 @@ func TestPutGetDel(t *testing.T) {
 	key := "hello"
 	val := "world"
 
-	t1 := t0.Put(key, val)
+	t1 := t0.Set(key, val)
 	assert.EqualInt(t, 0, t0.Len(), "t0.Len()")
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
 	got, ok := t1.Lookup(key)
@@ -492,8 +492,8 @@ func TestPutGetDel(t *testing.T) {
 }
 
 func TestStringer(t *testing.T) {
-	m := Map.Put("Hello", "World!")
-	x := Map.WithHasher(Bole32).Put("Hello", "World!").Put("Hi", "There!")
+	m := Map.Set("Hello", "World!")
+	x := Map.WithHasher(Bole32).Set("Hello", "World!").Set("Hi", "There!")
 
 	assert.EqualString(t, `Hamt{"Hello":"World!"}`, m.String(), "m.String()")
 	assert.EqualString(t, `HamtX{"Hello":"World!", "Hi":"There!"}`, x.String(), "x.String()")
@@ -585,7 +585,7 @@ func TestIndex(t *testing.T) {
 
 func TestSize(t *testing.T) {
 	t0 := &amt{}
-	t1 := t0.put(0, 0, "Hello", "World!")
+	t1 := t0.set(0, 0, "Hello", "World!")
 	assert.EqualInt(t, 32, int(unsafe.Sizeof(amt{})), "unsafe.Sizeof(amt{})")
 	assert.EqualInt(t, 32, t0.size(), "t0.size()")
 	assert.EqualInt(t, 16, int(unsafe.Sizeof(t1.entries[0])), "unsafe.Sizeof(t1.entries[0])")
@@ -593,8 +593,8 @@ func TestSize(t *testing.T) {
 	assert.EqualInt(t, 32+16+40, t1.size(), "t1.size()")
 
 	m0 := Map.WithHasher(Bole32)
-	m1 := m0.Put("Hello", "World!")
-	m2 := m1.Put("He11o", "There!")
+	m1 := m0.Set("Hello", "World!")
+	m2 := m1.Set("He11o", "There!")
 
 	assert.EqualInt(t, 32, int(unsafe.Sizeof(Map)), "unsafe.Sizeof(Map)")
 	assert.EqualInt(t, 40, m0.Size(), "m0.Size()")

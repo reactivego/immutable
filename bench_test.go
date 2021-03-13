@@ -17,7 +17,7 @@ var Countries []Country
 func TestCountries(t *testing.T) {
 	m := immutable.Map
 	for k, v := range Countries {
-		m = m.Put(k, v)
+		m = m.Set(k, v)
 	}
 	if len(Countries) != 175 {
 		t.Errorf("len(Countries) got %d expected %d", len(Countries), 175)
@@ -55,7 +55,7 @@ func BenchmarkImmutableMapGet(b *testing.B) {
 	func() {
 		b.Helper()
 		for _, c := range Countries {
-			m = m.Put(c.Name, c.Code)
+			m = m.Set(c.Name, c.Code)
 		}
 	}()
 	for i := 0; i < b.N; i++ {
@@ -67,7 +67,7 @@ func BenchmarkImmutableMapGet(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func BenchmarkGoMapPut(b *testing.B) {
+func BenchmarkGoMapSet(b *testing.B) {
 	var m map[string]string
 	count := len(Countries)
 	for i := 0; i < b.N; i++ {
@@ -80,7 +80,7 @@ func BenchmarkGoMapPut(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func BenchmarkImmutableMapPut(b *testing.B) {
+func BenchmarkImmutableMapSet(b *testing.B) {
 	// var ss, es runtime.MemStats
 	// runtime.ReadMemStats(&ss)
 	// MapAlloc := uint64(0)
@@ -91,7 +91,7 @@ func BenchmarkImmutableMapPut(b *testing.B) {
 			m = immutable.Map
 		}
 		c := Countries[i%count]
-		m = m.Put(c.Name, c.Code)
+		m = m.Set(c.Name, c.Code)
 		// MapAlloc += uint64(m.Size())
 	}
 	// runtime.ReadMemStats(&es)

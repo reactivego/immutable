@@ -87,12 +87,12 @@ func (a Hamt) String() string {
 	return "Hamt" + a.string()
 }
 
-func (a Hamt) Put(key, value Any) Hamt {
-	return Hamt{a.put(hash(key), 0, key, value)}
+func (a Hamt) Set(key, value Any) Hamt {
+	return Hamt{a.set(hash(key), 0, key, value)}
 }
 
-func (a Hamt) Set(key Any) Hamt {
-	return Hamt{a.put(hash(key), 0, key, nil)}
+func (a Hamt) Put(key Any) Hamt {
+	return Hamt{a.set(hash(key), 0, key, nil)}
 }
 
 func (a Hamt) Del(key Any) Hamt {
@@ -146,14 +146,14 @@ func (a HamtX) String() string {
 	return "HamtX" + a.string()
 }
 
-func (a HamtX) Put(key, value Any) HamtX {
+func (a HamtX) Set(key, value Any) HamtX {
 	h, k := a.hash(key)
-	return HamtX{a.put(h, 0, k, value), a.hash}
+	return HamtX{a.set(h, 0, k, value), a.hash}
 }
 
-func (a HamtX) Set(key Any) HamtX {
+func (a HamtX) Put(key Any) HamtX {
 	h, k := a.hash(key)
-	return HamtX{a.put(h, 0, k, nil), a.hash}
+	return HamtX{a.set(h, 0, k, nil), a.hash}
 }
 
 func (a HamtX) Del(key Any) HamtX {

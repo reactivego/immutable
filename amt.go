@@ -131,7 +131,7 @@ func (n amt) string() string {
 	return b.String()
 }
 
-func (n amt) put(prefix uint32, shift uint8, key, value any) amt {
+func (n amt) set(prefix uint32, shift uint8, key, value any) amt {
 	bitpos := bitpos(prefix, shift)
 	if present(n.bits, bitpos) {
 		index := index(n.bits, bitpos)
@@ -145,11 +145,11 @@ func (n amt) put(prefix uint32, shift uint8, key, value any) amt {
 			} else {
 				// replace item with a new amt node holding the 2 items
 				n.entries[index] = amt{}.
-					put(e.prefix, shift+nextlevel, e.key, e.value).
-					put(prefix, shift+nextlevel, key, value)
+					set(e.prefix, shift+nextlevel, e.key, e.value).
+					set(prefix, shift+nextlevel, key, value)
 			}
 		case amt:
-			n.entries[index] = e.put(prefix, shift+nextlevel, key, value)
+			n.entries[index] = e.set(prefix, shift+nextlevel, key, value)
 		}
 	} else if shift < collision {
 		index := index(n.bits, bitpos)
