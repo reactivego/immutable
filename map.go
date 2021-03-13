@@ -92,7 +92,7 @@ func (a Hamt) Set(key, value Any) Hamt {
 }
 
 func (a Hamt) Put(key Any) Hamt {
-	return Hamt{a.set(hash(key), 0, key, nil)}
+	return Hamt{a.set(hash(key), 0, key, key)}
 }
 
 func (a Hamt) Del(key Any) Hamt {
@@ -153,7 +153,7 @@ func (a HamtX) Set(key, value Any) HamtX {
 
 func (a HamtX) Put(key Any) HamtX {
 	h, k := a.hash(key)
-	return HamtX{a.set(h, 0, k, nil), a.hash}
+	return HamtX{a.set(h, 0, k, key), a.hash}
 }
 
 func (a HamtX) Del(key Any) HamtX {

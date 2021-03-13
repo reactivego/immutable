@@ -224,7 +224,6 @@ func TestSet(t *testing.T) {
 	s2 := s1.Put(k2)
 	s3 := s2.Put(k3)
 
-
 	x0 := Map.WithHasher(Bole32)
 	x1 := x0.Put(k1)
 	x2 := x1.Put(k2)
@@ -233,11 +232,13 @@ func TestSet(t *testing.T) {
 	assert.Equal(t, true, s3.Has(k1), "s3.Has(k1)")
 	assert.Equal(t, true, s3.Has(k2), "s3.Has(k2)")
 	assert.Equal(t, true, s3.Has(k3), "s3.Has(k3)")
+	assert.Equal(t, k3, s3.Get(k3), "s3.Get(k3)")
 	assert.Equal(t, false, s3.Has(k4), "s3.Has(k4)")
 
 	assert.Equal(t, true, x3.Has(k1), "x3.Has(k1)")
 	assert.Equal(t, true, x3.Has(k2), "x3.Has(k2)")
 	assert.Equal(t, true, x3.Has(k3), "x3.Has(k3)")
+	assert.Equal(t, k3, x3.Get(k3), "x3.Get(k3)")
 	assert.Equal(t, false, x3.Has(k4), "x3.Has(k4)")
 }
 
