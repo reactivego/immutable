@@ -28,8 +28,8 @@ func TestCountries(t *testing.T) {
 	if m.Depth() != 2 {
 		t.Errorf("m.Depth() got %d expected %d", m.Depth(), 2)
 	}
-	if m.Size() != 11376 {
-		t.Errorf("m.Size() got %d expected %d", m.Size(), 11376)
+	if m.Size() != 10992 {
+		t.Errorf("m.Size() got %d expected %d", m.Size(), 10992)
 	}
 }
 

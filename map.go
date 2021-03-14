@@ -1,8 +1,6 @@
 package immutable
 
-import (
-	"hash/maphash"
-)
+import "hash/maphash"
 
 type Any = interface{}
 
@@ -62,7 +60,7 @@ func (a Hamt) Depth() int {
 }
 
 func (a Hamt) Size() int {
-	return 8 + a.size()
+	return a.size()
 }
 
 func (a Hamt) Lookup(key Any) (Any, bool) {

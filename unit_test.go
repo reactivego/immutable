@@ -1,8 +1,6 @@
 package immutable
 
 import (
-	// "encoding/binary"
-
 	"testing"
 	"unsafe"
 )
@@ -585,26 +583,31 @@ func TestIndex(t *testing.T) {
 }
 
 func TestSize(t *testing.T) {
+	assert.EqualInt(t, 32, int(unsafe.Sizeof(amt{})), "unsafe.Sizeof(amt{})")
+	assert.EqualInt(t, 40, int(unsafe.Sizeof(entry{})), "unsafe.Sizeof(entry{})")
+	assert.EqualInt(t, 32, int(unsafe.Sizeof(Hamt{})), "unsafe.Sizeof(Hamt{})")
+	assert.EqualInt(t, 40, int(unsafe.Sizeof(HamtX{})), "unsafe.Sizeof(HamtX{})")
+
 	t0 := &amt{}
 	t1 := t0.set(0, 0, "Hello", "World!")
-	assert.EqualInt(t, 32, int(unsafe.Sizeof(amt{})), "unsafe.Sizeof(amt{})")
+
+	assert.EqualInt(t, 8, int(unsafe.Sizeof(t1.entries[0])), "unsafe.Sizeof(t1.entries[0])")
 	assert.EqualInt(t, 32, t0.size(), "t0.size()")
-	assert.EqualInt(t, 16, int(unsafe.Sizeof(t1.entries[0])), "unsafe.Sizeof(t1.entries[0])")
-	assert.EqualInt(t, 40, int(unsafe.Sizeof(item{})), "unsafe.Sizeof(item{})")
-	assert.EqualInt(t, 32+16+40, t1.size(), "t1.size()")
+	assert.EqualInt(t, 32+8+40, t1.size(), "t1.size()")
+	assert.EqualInt(t, 1, t1.len(), "t1.Len()")
+	assert.EqualInt(t, 1, t1.depth(), "t1.Depth()")
 
 	m0 := Map.WithHasher(Bole32)
 	m1 := m0.Set("Hello", "World!")
 	m2 := m1.Set("He11o", "There!")
 
-	assert.EqualInt(t, 32, int(unsafe.Sizeof(Map)), "unsafe.Sizeof(Map)")
-	assert.EqualInt(t, 40, m0.Size(), "m0.Size()")
-
-	assert.EqualInt(t, 96, m1.Size(), "m1.Size()")
-
+	assert.EqualInt(t, 8+32, m0.Size(), "m0.Size()")
+	assert.EqualInt(t, 1, m1.Len(), "m1.Len()")
+	assert.EqualInt(t, 1, m1.Depth(), "m1.Depth()")
+	assert.EqualInt(t, 8+(32+8+40), m1.Size(), "m1.Size()")
 	assert.EqualInt(t, 2, m2.Len(), "m2.Len()")
 	assert.EqualInt(t, 4, m2.Depth(), "m2.Depth()")
-	assert.EqualInt(t, 8+48+48+48+64+80, m2.Size(), "m2.Size()")
+	assert.EqualInt(t, 8+(32+8+40)+(32+8+40)+(32+8+40)+(32+2*(8+40)), m2.Size(), "m2.Size()")
 }
 
 func TestBole32(t *testing.T) {

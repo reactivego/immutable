@@ -11,14 +11,14 @@ type any = interface{}
 
 // amt takes 32 + len(entries) * 16 bytes on 64bit archs
 type amt struct {
-	bits    uint32 // 8 bytes on 64bit archs
-	entries []any  // 24 + len(entries) * 16 bytes on 64bit archs
+	bits    uint32   // 8 bytes on 64bit archs
+	entries []*entry // 24 + len(entries) * 8 bytes on 64bit archs
 }
 
-// item takes 40 bytes on 64bit archs
-type item struct {
+// entry takes 40 bytes on 64bit archs
+type entry struct {
 	prefix uint32 // 8 bytes on 64bit archs
-	key    any    // 16 bytes on 64bit archs
+	ref    any    // 16 bytes on 64bit archs
 	value  any    // 16 bytes on 64bit archs
 }
 
@@ -39,9 +39,9 @@ func present(bitmap uint32, bitpos uint32) bool {
 
 func (n amt) len() int {
 	len := len(n.entries)
-	for _, entry := range n.entries {
-		if e, ok := entry.(amt); ok {
-			len += e.len() - 1
+	for _, e := range n.entries {
+		if a, ok := e.ref.(amt); ok {
+			len += a.len() - 1
 		}
 	}
 	return len
@@ -49,9 +49,9 @@ func (n amt) len() int {
 
 func (n amt) depth() int {
 	depth := 0
-	for _, entry := range n.entries {
-		if e, ok := entry.(amt); ok {
-			d := e.depth()
+	for _, e := range n.entries {
+		if a, ok := e.ref.(amt); ok {
+			d := a.depth()
 			if d > depth {
 				depth = d
 			}
@@ -62,15 +62,12 @@ func (n amt) depth() int {
 
 func (n amt) size() int {
 	const amtsize = 32
-	const anysize = 16
+	const ptrsize = 8
 	const itemsize = 40
-	size := amtsize + anysize*len(n.entries)
-	for _, entry := range n.entries {
-		switch e := entry.(type) {
-		case item:
-			size += itemsize
-		case amt:
-			size += e.size()
+	size := amtsize + (ptrsize + itemsize)*len(n.entries)
+	for _, e := range n.entries {
+		if a, ok := e.ref.(amt); ok {
+			size += a.size()
 		}
 	}
 	return size
@@ -80,19 +77,18 @@ func (n amt) lookup(prefix uint32, shift uint8, key any) (any, bool) {
 	for {
 		bitpos := bitpos(prefix, shift)
 		if present(n.bits, bitpos) {
-			switch e := n.entries[index(n.bits, bitpos)].(type) {
-			case item:
-				if e.prefix == prefix && e.key == key {
-					return e.value, true
-				}
-			case amt:
-				n = e
+			e := n.entries[index(n.bits, bitpos)]
+			if a, ok := e.ref.(amt); ok {
+				n = a
 				shift += nextlevel
 				continue
 			}
+			if e.prefix == prefix && e.ref == key {
+				return e.value, true
+			}
 		} else if shift == collision {
-			for _, entry := range n.entries {
-				if e := entry.(item); e.prefix == prefix && e.key == key {
+			for _, e := range n.entries {
+				if e.prefix == prefix && e.ref == key {
 					return e.value, true
 				}
 			}
@@ -102,14 +98,13 @@ func (n amt) lookup(prefix uint32, shift uint8, key any) (any, bool) {
 }
 
 func (n amt) foreach(f func(key, value any) bool) {
-	for _, entry := range n.entries {
-		switch e := entry.(type) {
-		case item:
-			if !f(e.key, e.value) {
+	for _, e := range n.entries {
+		if a, ok := e.ref.(amt); ok {
+			a.foreach(f)
+		} else {
+			if !f(e.ref, e.value) {
 				return
 			}
-		case amt:
-			e.foreach(f)
 		}
 	}
 }
@@ -135,41 +130,41 @@ func (n amt) set(prefix uint32, shift uint8, key, value any) amt {
 	bitpos := bitpos(prefix, shift)
 	if present(n.bits, bitpos) {
 		index := index(n.bits, bitpos)
-		entries := make([]any, len(n.entries))
+		entries := make([]*entry, len(n.entries))
 		copy(entries, n.entries)
 		n.entries = entries
-		switch e := n.entries[index].(type) {
-		case item:
-			if e.prefix == prefix && e.key == key {
-				n.entries[index] = item{prefix: prefix, key: key, value: value}
+		e := n.entries[index]
+		if a, ok := e.ref.(amt); ok {
+			n.entries[index] = &entry{ref: a.set(prefix, shift+nextlevel, key, value)}
+		} else {
+			if e.prefix == prefix && e.ref == key {
+				n.entries[index] = &entry{prefix, key, value}
 			} else {
 				// replace item with a new amt node holding the 2 items
-				n.entries[index] = amt{}.
-					set(e.prefix, shift+nextlevel, e.key, e.value).
-					set(prefix, shift+nextlevel, key, value)
+				n.entries[index] = &entry{ref: amt{}.
+					set(e.prefix, shift+nextlevel, e.ref, e.value).
+					set(prefix, shift+nextlevel, key, value)}
 			}
-		case amt:
-			n.entries[index] = e.set(prefix, shift+nextlevel, key, value)
 		}
 	} else if shift < collision {
 		index := index(n.bits, bitpos)
-		entries := make([]any, len(n.entries)+1)
+		entries := make([]*entry, len(n.entries)+1)
 		n.bits |= bitpos
 		copy(entries, n.entries[:index])
 		copy(entries[index+1:], n.entries[index:])
-		entries[index] = item{prefix: prefix, key: key, value: value}
+		entries[index] = &entry{prefix, key, value}
 		n.entries = entries
 	} else {
-		entries := make([]any, len(n.entries))
+		entries := make([]*entry, len(n.entries))
 		copy(entries, n.entries)
 		n.entries = entries
-		for index, entry := range n.entries {
-			if e := entry.(item); e.key == key {
-				n.entries[index] = item{prefix: prefix, key: key, value: value}
+		for index, e := range n.entries {
+			if e.ref == key {
+				n.entries[index] = &entry{prefix, key, value}
 				return n
 			}
 		}
-		n.entries = append(n.entries, item{prefix: prefix, key: key, value: value})
+		n.entries = append(n.entries, &entry{prefix, key, value})
 	}
 	return n
 }
@@ -178,32 +173,32 @@ func (n amt) delete(prefix uint32, shift uint8, key any) amt {
 	bitpos := bitpos(prefix, shift)
 	if present(n.bits, bitpos) {
 		index := index(n.bits, bitpos)
-		switch e := n.entries[index].(type) {
-		case item:
-			if e.prefix == prefix && e.key == key {
-				entries := make([]any, len(n.entries)-1)
+		e := n.entries[index]
+		if a, ok := e.ref.(amt); ok {
+			entries := make([]*entry, len(n.entries))
+			copy(entries, n.entries)
+			if a = a.delete(prefix, shift+nextlevel, key); a.len() == 1 {
+				entries[index] = a.entries[0]
+			} else {
+				entries[index] = &entry{ref: a}
+			}
+			n.entries = entries
+		} else {
+			if e.prefix == prefix && e.ref == key {
+				entries := make([]*entry, len(n.entries)-1)
 				copy(entries, n.entries[:index])
 				copy(entries[index:], n.entries[index+1:])
 				n.bits &= ^bitpos
 				n.entries = entries
 			}
-		case amt:
-			entries := make([]any, len(n.entries))
-			copy(entries, n.entries)
-			if e = e.delete(prefix, shift+nextlevel, key); e.len() == 1 {
-				entries[index] = e.entries[0]
-			} else {
-				entries[index] = e
-			}
-			n.entries = entries
 		}
 	} else if shift == collision {
-		for index, entry := range n.entries {
-			if e := entry.(item); e.prefix == prefix && e.key == key {
+		for index, e := range n.entries {
+			if e.prefix == prefix && e.ref == key {
 				if index+1 == len(n.entries) {
 					n.entries = n.entries[:index]
 				} else {
-					entries := make([]any, len(n.entries)-1)
+					entries := make([]*entry, len(n.entries)-1)
 					copy(entries, n.entries[:index])
 					copy(entries[index:], n.entries[index+1:])
 					n.entries = entries
