@@ -64,7 +64,7 @@ func (n amt) size() int {
 	const amtsize = 32
 	const ptrsize = 8
 	const entrysize = 40
-	size := amtsize + (ptrsize + entrysize)*len(n.entries)
+	size := amtsize + (ptrsize+entrysize)*len(n.entries)
 	for _, e := range n.entries {
 		if a, ok := e.ref.(amt); ok {
 			size += a.size()
