@@ -185,11 +185,15 @@ func (n amt) delete(prefix uint32, shift uint8, key any) amt {
 			n.entries = entries
 		} else {
 			if e.prefix == prefix && e.ref == key {
-				entries := make([]*entry, len(n.entries)-1)
-				copy(entries, n.entries[:index])
-				copy(entries[index:], n.entries[index+1:])
+				if index+1 == len(n.entries) {
+					n.entries = n.entries[:index]
+				} else {
+					entries := make([]*entry, len(n.entries)-1)
+					copy(entries, n.entries[:index])
+					copy(entries[index:], n.entries[index+1:])
+					n.entries = entries
+				}
 				n.bits &= ^bitpos
-				n.entries = entries
 			}
 		}
 	} else if shift == collision {
