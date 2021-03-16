@@ -14,7 +14,7 @@ func Example_map() {
 	m = m.Set("Hello", "World!")
 	fmt.Println(m)
 	// Output:
-	// Hamt{"Hello":"World!"}
+	// {Hello:World!}
 }
 
 func ExampleHamt() {
@@ -37,7 +37,7 @@ func ExampleHamt() {
 	m = m.Set(Key{1, 2}, Topic{"Theme", "This is a topic about theme"})
 	fmt.Println(m)
 	// Output:
-	// HamtX{immutable_test.Key{K1:1, K2:2}:immutable_test.Topic{Name:"Theme", Description:"This is a topic about theme"}}
+	// {{K1:1 K2:2}:{Name:Theme Description:This is a topic about theme}}
 }
 
 func ExampleHamtX() {
@@ -58,8 +58,8 @@ func ExampleHamtX() {
 
 	m = m.Put(Topic{"Theme", "This is a topic about theme"})
 	fmt.Println(m)
-	fmt.Printf("%#v", m.Get(Topic{Name: "Theme"}))
+	fmt.Printf("%+v", m.Get(Topic{Name: "Theme"}))
 	// Output:
-	// HamtX{"Theme":immutable_test.Topic{Name:"Theme", Description:"This is a topic about theme"}}
-	// immutable_test.Topic{Name:"Theme", Description:"This is a topic about theme"}
+	// {Theme:{Name:Theme Description:This is a topic about theme}}
+	// {Name:Theme Description:This is a topic about theme}
 }

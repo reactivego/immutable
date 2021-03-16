@@ -119,7 +119,7 @@ func (n amt) string() string {
 		} else {
 			b.WriteString(sep)
 		}
-		_, err := fmt.Fprintf(&b, "%#v:%#v", k, v)
+		_, err := fmt.Fprintf(&b, "%+v:%+v", k, v)
 		return err == nil
 	})
 	b.WriteByte('}')

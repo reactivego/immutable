@@ -494,8 +494,8 @@ func TestStringer(t *testing.T) {
 	m := Map.Set("Hello", "World!")
 	x := Map.WithHasher(Bole32).Set("Hello", "World!").Set("Hi", "There!")
 
-	assert.EqualString(t, `Hamt{"Hello":"World!"}`, m.String(), "m.String()")
-	assert.EqualString(t, `HamtX{"Hello":"World!", "Hi":"There!"}`, x.String(), "x.String()")
+	assert.EqualString(t, `{Hello:World!}`, m.String(), "m.String()")
+	assert.EqualString(t, `{Hello:World!, Hi:There!}`, x.String(), "x.String()")
 }
 
 func TestPresent(t *testing.T) {

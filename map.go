@@ -100,7 +100,7 @@ func (a Hamt) Range(f func(Any, Any) bool) {
 
 // String returns a string representation of the key,value pairs present.
 func (a Hamt) String() string {
-	return "Hamt" + a.string()
+	return a.string()
 }
 
 // Set returns a copy of the Hamt with the given key,value pair inserted.
@@ -178,7 +178,7 @@ func (a HamtX) Range(f func(Any, Any) bool) {
 
 // String returns a string representation of the key,value pairs present.
 func (a HamtX) String() string {
-	return "HamtX" + a.string()
+	return a.string()
 }
 
 // Set returns a copy of the HamtX with the given key,value pair inserted.
