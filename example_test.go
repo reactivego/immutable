@@ -9,7 +9,7 @@ import (
 	"hash/maphash"
 )
 
-func ExampleInternalHasher() {
+func Example_map() {
 	m := immutable.Map
 	m = m.Set("Hello", "World!")
 	fmt.Println(m)
@@ -17,7 +17,7 @@ func ExampleInternalHasher() {
 	// Hamt{"Hello":"World!"}
 }
 
-func ExampleExternalHasherSeparateKey() {
+func ExampleHamt() {
 	type any = interface{}
 	type Key struct{ K1, K2 int64 }
 	type Topic struct{ Name, Description string }
@@ -40,7 +40,7 @@ func ExampleExternalHasherSeparateKey() {
 	// HamtX{immutable_test.Key{K1:1, K2:2}:immutable_test.Topic{Name:"Theme", Description:"This is a topic about theme"}}
 }
 
-func ExampleExternalHasherKeyValueCombo() {
+func ExampleHamtX() {
 	type any = interface{}
 
 	// Topic Name is used as the key
