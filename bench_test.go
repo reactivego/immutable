@@ -28,8 +28,9 @@ func TestCountries(t *testing.T) {
 	if m.Depth() != 2 {
 		t.Errorf("m.Depth() got %d expected %d", m.Depth(), 2)
 	}
-	if m.Size() != 10992 {
-		t.Errorf("m.Size() got %d expected %d", m.Size(), 10992)
+	const arch = int(2 - uint64(^uint(0))>>63)
+	if m.Size() != 10992/arch {
+		t.Errorf("m.Size() got %d expected %d", m.Size(), 10992/arch)
 	}
 }
 

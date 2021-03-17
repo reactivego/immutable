@@ -61,9 +61,10 @@ func (n amt) depth() int {
 }
 
 func (n amt) size() int {
-	const amtsize = 32
-	const ptrsize = 8
-	const entrysize = 40
+	const arch = int(2 - uint64(^uint(0))>>63)
+	const amtsize = 32 / arch
+	const ptrsize = 8 / arch
+	const entrysize = 40 / arch
 	size := amtsize + (ptrsize+entrysize)*len(n.entries)
 	for _, e := range n.entries {
 		if a, ok := e.ref.(amt); ok {

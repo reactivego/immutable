@@ -146,7 +146,8 @@ func (a HamtX) Depth() int {
 // Size returns the number of bytes used for storing the entries, not
 // including the size of the actual keys and the values.
 func (a HamtX) Size() int {
-	return 8 + a.size()
+	const arch = int(2 - uint64(^uint(0))>>63)
+	return 8/arch + a.size()
 }
 
 // Lookup returns the value of an entry associated with a given key along with
