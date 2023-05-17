@@ -2,8 +2,6 @@ package immutable
 
 import "hash/maphash"
 
-type Any = interface{}
-
 type MapError string
 
 func (e MapError) Error() string {
@@ -25,7 +23,7 @@ var Map = Hamt{}
 
 var seed = maphash.MakeSeed()
 
-func hash(key Any) uint32 {
+func hash(key any) uint32 {
 	switch k := key.(type) {
 	case string:
 		var h maphash.Hash
@@ -76,25 +74,25 @@ func (a Hamt) Size() int {
 
 // Lookup returns the value of an entry associated with a given key along with
 // the value true when the key is present. Otherwise it returns (nil, false).
-func (a Hamt) Lookup(key Any) (Any, bool) {
+func (a Hamt) Lookup(key any) (any, bool) {
 	return a.lookup(hash(key), 0, key)
 }
 
 // Has returns true when an entry with the given key is present.
-func (a Hamt) Has(key Any) bool {
+func (a Hamt) Has(key any) bool {
 	_, b := a.lookup(hash(key), 0, key)
 	return b
 }
 
 // Get returns the value for the entry with the given key or nil when it is
 // not present.
-func (a Hamt) Get(key Any) Any {
+func (a Hamt) Get(key any) any {
 	v, _ := a.lookup(hash(key), 0, key)
 	return v
 }
 
 // Range calls the given function for every key,value pair present.
-func (a Hamt) Range(f func(Any, Any) bool) {
+func (a Hamt) Range(f func(any, any) bool) {
 	a.foreach(f)
 }
 
@@ -104,32 +102,32 @@ func (a Hamt) String() string {
 }
 
 // Set returns a copy of the Hamt with the given key,value pair inserted.
-func (a Hamt) Set(key, value Any) Hamt {
+func (a Hamt) Set(key, value any) Hamt {
 	return Hamt{a.set(hash(key), 0, key, value)}
 }
 
 // Put returns a copy of the Hamt with the key,key pair inserted. So the key
 // is also inserted as the value.
-func (a Hamt) Put(key Any) Hamt {
+func (a Hamt) Put(key any) Hamt {
 	return Hamt{a.set(hash(key), 0, key, key)}
 }
 
 // Del returns a copy of the Hamt with the entry for the key removed.
-func (a Hamt) Del(key Any) Hamt {
+func (a Hamt) Del(key any) Hamt {
 	return Hamt{a.delete(hash(key), 0, key)}
 }
 
 // WithHasher returns an empty HamtX with the given hasher function. The
 // hasher function is used to convert a key into a hash an a key. So it allows
 // for key transformation.
-func (a Hamt) WithHasher(hash func(Any) (uint32, Any)) HamtX {
+func (a Hamt) WithHasher(hash func(any) (uint32, any)) HamtX {
 	return HamtX{hash: hash}
 }
 
 // HamtX is a Hash Array Mapped Trie with an external hash function.
 type HamtX struct {
 	amt
-	hash func(Any) (uint32, Any)
+	hash func(any) (uint32, any)
 }
 
 // Len returns the number of entries that are present.
@@ -152,13 +150,13 @@ func (a HamtX) Size() int {
 
 // Lookup returns the value of an entry associated with a given key along with
 // the value true when the key is present. Otherwise it returns (nil, false).
-func (a HamtX) Lookup(key Any) (Any, bool) {
+func (a HamtX) Lookup(key any) (any, bool) {
 	h, k := a.hash(key)
 	return a.lookup(h, 0, k)
 }
 
 // Has returns true when an entry with the given key is present.
-func (a HamtX) Has(key Any) bool {
+func (a HamtX) Has(key any) bool {
 	h, k := a.hash(key)
 	_, b := a.lookup(h, 0, k)
 	return b
@@ -166,14 +164,14 @@ func (a HamtX) Has(key Any) bool {
 
 // Get returns the value for the entry with the given key or nil when it is
 // not present.
-func (a HamtX) Get(key Any) Any {
+func (a HamtX) Get(key any) any {
 	h, k := a.hash(key)
 	v, _ := a.lookup(h, 0, k)
 	return v
 }
 
 // Range calls the given function for every key,value pair present.
-func (a HamtX) Range(f func(Any, Any) bool) {
+func (a HamtX) Range(f func(any, any) bool) {
 	a.foreach(f)
 }
 
@@ -183,20 +181,20 @@ func (a HamtX) String() string {
 }
 
 // Set returns a copy of the HamtX with the given key,value pair inserted.
-func (a HamtX) Set(key, value Any) HamtX {
+func (a HamtX) Set(key, value any) HamtX {
 	h, k := a.hash(key)
 	return HamtX{a.set(h, 0, k, value), a.hash}
 }
 
 // Put returns a copy of the HamtX with the key,key pair inserted. So the key
 // is also inserted as the value.
-func (a HamtX) Put(key Any) HamtX {
+func (a HamtX) Put(key any) HamtX {
 	h, k := a.hash(key)
 	return HamtX{a.set(h, 0, k, key), a.hash}
 }
 
 // Del returns a copy of the HamtX with the entry for the key removed.
-func (a HamtX) Del(key Any) HamtX {
+func (a HamtX) Del(key any) HamtX {
 	h, k := a.hash(key)
 	return HamtX{a.delete(h, 0, k), a.hash}
 }

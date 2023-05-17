@@ -195,13 +195,13 @@ func TestRange(t *testing.T) {
 	t2 := t1.Set(k2, v2)
 
 	c1 := 0
-	t1.Range(func(key, value Any) bool {
+	t1.Range(func(key, value any) bool {
 		c1 += 1
 		return key != k2
 	})
 
 	c2 := 0
-	t2.Range(func(key, value Any) bool {
+	t2.Range(func(key, value any) bool {
 		c2 += 1
 		return key != k1
 	})
@@ -263,7 +263,7 @@ func TestPutGetDelInt(t *testing.T) {
 	t3 := t2.Del(k1)
 
 	count := 0
-	t2.Range(func(key, value Any) bool {
+	t2.Range(func(key, value any) bool {
 		count++
 		return true
 	})
@@ -613,7 +613,7 @@ func TestSize(t *testing.T) {
 }
 
 func TestBole32(t *testing.T) {
-	h := func(h uint32, k Any) uint32 {
+	h := func(h uint32, k any) uint32 {
 		return h
 	}
 	tests := []struct{ exp, got uint32 }{
@@ -636,7 +636,7 @@ func TestBole32(t *testing.T) {
 
 // Bole32 returns the head of a string as a uint32 in Little Endian Byte
 // Order.
-func Bole32(key Any) (uint32, Any) {
+func Bole32(key any) (uint32, any) {
 	switch k := key.(type) {
 	case string:
 		switch len(k) {

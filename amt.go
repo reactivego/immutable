@@ -7,7 +7,6 @@ import (
 )
 
 // any takes 16 bytes on 64bit archs
-type any = interface{}
 
 // amt takes 32 + len(entries) * 8 bytes on 64bit archs
 type amt struct {
