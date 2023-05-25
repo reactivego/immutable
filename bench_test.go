@@ -15,7 +15,7 @@ type Country struct {
 var Countries []Country
 
 func TestCountries(t *testing.T) {
-	m := immutable.Map
+	m := immutable.Map[int, Country]{}
 	for k, v := range Countries {
 		m = m.Set(k, v)
 	}
@@ -29,8 +29,8 @@ func TestCountries(t *testing.T) {
 		t.Errorf("m.Depth() got %d expected %d", m.Depth(), 2)
 	}
 	const arch = int(2 - uint64(^uint(0))>>63)
-	if m.Size() != 10992/arch {
-		t.Errorf("m.Size() got %d expected %d", m.Size(), 10992/arch)
+	if immutable.SizeMap(m) != 14304/arch {
+		t.Errorf("Size(m) got %d expected %d", immutable.SizeMap(m), 14304/arch)
 	}
 }
 
@@ -52,7 +52,7 @@ func BenchmarkGoMapGet(b *testing.B) {
 }
 
 func BenchmarkImmutableMapGet(b *testing.B) {
-	m := immutable.Map
+	m := immutable.Map[string, string]{}
 	func() {
 		b.Helper()
 		for _, c := range Countries {
@@ -85,11 +85,11 @@ func BenchmarkImmutableMapSet(b *testing.B) {
 	// var ss, es runtime.MemStats
 	// runtime.ReadMemStats(&ss)
 	// MapAlloc := uint64(0)
-	m := immutable.Map
+	m := immutable.Map[string, string]{}
 	count := len(Countries)
 	for i := 0; i < b.N; i++ {
 		if i%count == 0 {
-			m = immutable.Map
+			m = immutable.Map[string, string]{}
 		}
 		c := Countries[i%count]
 		m = m.Set(c.Name, c.Code)

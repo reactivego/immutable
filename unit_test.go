@@ -2,11 +2,13 @@ package immutable
 
 import (
 	"testing"
-	"unsafe"
 )
 
 func TestDelDeep(t *testing.T) {
-	t0 := Map.WithHasher(Bole32)
+	EnableHashCollision = true
+	t0 := MapWith[string, string](func(a any) ([]byte, error) {
+		return []byte(a.(string))[:4], nil
+	})
 
 	k1 := "He1lo"
 	v1 := "World!"
@@ -31,7 +33,10 @@ func TestDelDeep(t *testing.T) {
 }
 
 func TestGetDeep(t *testing.T) {
-	t0 := Map.WithHasher(Bole32)
+	EnableHashCollision = true
+	t0 := MapWith[string, string](func(a any) ([]byte, error) {
+		return []byte(a.(string))[:4], nil
+	})
 
 	k1 := "He1lo"
 	v1 := "World!"
@@ -50,7 +55,10 @@ func TestGetDeep(t *testing.T) {
 }
 
 func TestPutDeep(t *testing.T) {
-	t0 := Map.WithHasher(Bole32)
+	EnableHashCollision = true
+	t0 := MapWith[string, string](func(a any) ([]byte, error) {
+		return []byte(a.(string))[:4], nil
+	})
 
 	k1 := "He1lo"
 	v1 := "World!"
@@ -77,7 +85,10 @@ func TestPutDeep(t *testing.T) {
 }
 
 func TestDelCollision(t *testing.T) {
-	t0 := Map.WithHasher(Bole32)
+	EnableHashCollision = true
+	t0 := MapWith[string, string](func(a any) ([]byte, error) {
+		return []byte(a.(string))[:4], nil
+	})
 
 	k1 := "Hello1"
 	v1 := "World!"
@@ -123,7 +134,10 @@ func TestDelCollision(t *testing.T) {
 }
 
 func TestGetCollision(t *testing.T) {
-	t0 := Map.WithHasher(Bole32)
+	EnableHashCollision = true
+	t0 := MapWith[string, string](func(a any) ([]byte, error) {
+		return []byte(a.(string))[:4], nil
+	})
 
 	k1 := "Hello1"
 	v1 := "World!"
@@ -142,7 +156,10 @@ func TestGetCollision(t *testing.T) {
 }
 
 func TestPutCollision(t *testing.T) {
-	t0 := Map.WithHasher(Bole32)
+	EnableHashCollision = true
+	t0 := MapWith[string, string](func(a any) ([]byte, error) {
+		return []byte(a.(string))[:4], nil
+	})
 
 	k1 := "Hello1"
 	v1 := "World!"
@@ -183,7 +200,7 @@ func TestPutCollision(t *testing.T) {
 }
 
 func TestRange(t *testing.T) {
-	t0 := Map.WithHasher(Bole32)
+	var t0 Map[string, string]
 
 	k1 := "Hello"
 	v1 := "World!"
@@ -195,15 +212,15 @@ func TestRange(t *testing.T) {
 	t2 := t1.Set(k2, v2)
 
 	c1 := 0
-	t1.Range(func(key, value any) bool {
+	t1.Range(func(key string, value string) bool {
 		c1 += 1
 		return key != k2
 	})
 
 	c2 := 0
-	t2.Range(func(key, value any) bool {
+	t2.Range(func(key string, value string) bool {
 		c2 += 1
-		return key != k1
+		return true
 	})
 
 	assert.EqualInt(t, 1, c1, "t1.Range()")
@@ -211,7 +228,7 @@ func TestRange(t *testing.T) {
 }
 
 func TestSet(t *testing.T) {
-	s0 := Map
+	var s0 Set[string]
 
 	k1 := "first"
 	k2 := "second"
@@ -222,22 +239,39 @@ func TestSet(t *testing.T) {
 	s2 := s1.Put(k2)
 	s3 := s2.Put(k3)
 
-	x0 := Map.WithHasher(Bole32)
-	x1 := x0.Put(k1)
-	x2 := x1.Put(k2)
-	x3 := x2.Put(k3)
-
 	assert.Equal(t, true, s3.Has(k1), "s3.Has(k1)")
 	assert.Equal(t, true, s3.Has(k2), "s3.Has(k2)")
 	assert.Equal(t, true, s3.Has(k3), "s3.Has(k3)")
-	assert.Equal(t, k3, s3.Get(k3), "s3.Get(k3)")
 	assert.Equal(t, false, s3.Has(k4), "s3.Has(k4)")
+}
 
-	assert.Equal(t, true, x3.Has(k1), "x3.Has(k1)")
-	assert.Equal(t, true, x3.Has(k2), "x3.Has(k2)")
-	assert.Equal(t, true, x3.Has(k3), "x3.Has(k3)")
-	assert.Equal(t, k3, x3.Get(k3), "x3.Get(k3)")
-	assert.Equal(t, false, x3.Has(k4), "x3.Has(k4)")
+func TestStore(t *testing.T) {
+	type composite struct{ name, value string }
+
+	x0 := StoreWith(func(data composite) (string, string) {
+		return data.name, data.value
+	})
+
+	k := []composite{
+		{"first", "clown"},
+		{"second", "joker"},
+		{"third", "jester"},
+		{"fourth", "fool"},
+	}
+
+	x1 := x0.Put(k[0])
+	x2 := x1.Put(k[1])
+	x3 := x2.Put(k[2])
+	x4 := x3.Put(k[3])
+
+	assert.Equal(t, true, x3.Has(k[0]), "x3.Has(k[0])")
+	assert.Equal(t, true, x3.Has(k[1]), "x3.Has(k[1])")
+	assert.Equal(t, true, x3.Has(k[2]), "x3.Has(k[2])")
+	assert.Equal(t, k[2].value, x3.Get(k[2]), "x3.Get(k[2])")
+	assert.Equal(t, false, x3.Has(k[3]), "x3.Has(k[3])")
+	assert.Equal(t, false, x3.Has(k[3]), "x3.Has(k[3])")
+	assert.Equal(t, true, x4.Has(k[3]), "x4.Has(k[3])")
+	assert.Equal(t, k[3].value, x4.Get(k[3]), "x4.Has(k[3])")
 }
 
 func TestUnhashableKey(t *testing.T) {
@@ -245,12 +279,12 @@ func TestUnhashableKey(t *testing.T) {
 		assert.Equal(t, UnhashableKeyType, recover(), "err == UnhashableKeyType")
 	}()
 	assert.Equal(t, "Unhashable Key Type", UnhashableKeyType.Error(), "err == UnhashableKeyType")
-	Map.Set(struct{ id int }{123}, 456)
+	Map[any, int]{}.Set(struct{ a int }{123}, 456)
 	assert.Equal(t, false, true, "Unreachable")
 }
 
 func TestPutGetDelInt(t *testing.T) {
-	t0 := Map
+	var t0 Map[int, string]
 
 	k1 := uint(120120)
 	v1 := "value1"
@@ -258,31 +292,31 @@ func TestPutGetDelInt(t *testing.T) {
 	k2 := int(120120)
 	v2 := "value2"
 
-	t1 := t0.Set(k1, v1)
+	t1 := t0.Set(int(k1), v1)
 	t2 := t1.Set(k2, v2)
-	t3 := t2.Del(k1)
+	t3 := t2.Del(int(k1))
 
 	count := 0
-	t2.Range(func(key, value any) bool {
+	t2.Range(func(key int, value string) bool {
 		count++
 		return true
 	})
-	assert.Equal(t, count, 2, "t2.Range()")
+	assert.Equal(t, 1, count, "t2.Range()")
 
-	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
-	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
-	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v1, t1.Get(int(k1)), "t1.Get(k1)")
+	assert.Equal(t, v1, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v2, t2.Get(int(k1)), "t2.Get(k1)")
 	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
-	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
-	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
+	assert.Equal(t, false, t3.Has(int(k1)), "t3.Has(k1)")
+	assert.Equal(t, false, t3.Has(k2), "t3.Has(k2)")
 
 	val, ok := t3.Lookup(k2)
-	assert.Equal(t, true, ok, "_, ok := t3.Lookup(k2)")
-	assert.Equal(t, v2, val, "val, _ := t3.Lookup(k2)")
+	assert.Equal(t, false, ok, "_, ok := t3.Lookup(k2)")
+	assert.Equal(t, "", val, "val, _ := t3.Lookup(k2)")
 }
 
 func TestPutGetDelUint64(t *testing.T) {
-	t0 := Map
+	var t0 Map[uint64, string]
 
 	k1 := uint64(120120)
 	v1 := "value1"
@@ -295,7 +329,7 @@ func TestPutGetDelUint64(t *testing.T) {
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
-	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, "", t1.Get(k2), "t1.Get(k2)")
 	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
 	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
 	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
@@ -303,7 +337,7 @@ func TestPutGetDelUint64(t *testing.T) {
 }
 
 func TestPutGetDelInt64(t *testing.T) {
-	t0 := Map
+	var t0 Map[int64, string]
 
 	k1 := int64(120120)
 	v1 := "value1"
@@ -316,7 +350,7 @@ func TestPutGetDelInt64(t *testing.T) {
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
-	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, "", t1.Get(k2), "t1.Get(k2)")
 	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
 	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
 	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
@@ -324,7 +358,7 @@ func TestPutGetDelInt64(t *testing.T) {
 }
 
 func TestPutGetDelUint32(t *testing.T) {
-	t0 := Map
+	var t0 Map[uint32, string]
 
 	k1 := uint32(120)
 	v1 := "value1"
@@ -337,7 +371,7 @@ func TestPutGetDelUint32(t *testing.T) {
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
-	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, "", t1.Get(k2), "t1.Get(k2)")
 	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
 	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
 	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
@@ -345,7 +379,7 @@ func TestPutGetDelUint32(t *testing.T) {
 }
 
 func TestPutGetDelInt32(t *testing.T) {
-	t0 := Map
+	var t0 Map[int32, string]
 
 	k1 := int32(120)
 	v1 := "value1"
@@ -358,7 +392,7 @@ func TestPutGetDelInt32(t *testing.T) {
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
-	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, "", t1.Get(k2), "t1.Get(k2)")
 	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
 	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
 	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
@@ -366,7 +400,7 @@ func TestPutGetDelInt32(t *testing.T) {
 }
 
 func TestPutGetDelUint16(t *testing.T) {
-	t0 := Map
+	var t0 Map[uint16, string]
 
 	k1 := uint16(120)
 	v1 := "value1"
@@ -379,7 +413,7 @@ func TestPutGetDelUint16(t *testing.T) {
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
-	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, "", t1.Get(k2), "t1.Get(k2)")
 	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
 	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
 	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
@@ -387,7 +421,7 @@ func TestPutGetDelUint16(t *testing.T) {
 }
 
 func TestPutGetDelInt16(t *testing.T) {
-	t0 := Map
+	var t0 Map[int16, string]
 
 	k1 := int16(120)
 	v1 := "value1"
@@ -400,7 +434,7 @@ func TestPutGetDelInt16(t *testing.T) {
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
-	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, "", t1.Get(k2), "t1.Get(k2)")
 	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
 	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
 	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
@@ -408,7 +442,7 @@ func TestPutGetDelInt16(t *testing.T) {
 }
 
 func TestPutGetDelUint8(t *testing.T) {
-	t0 := Map
+	var t0 Map[uint8, string]
 
 	k1 := uint8(120)
 	v1 := "value1"
@@ -421,7 +455,7 @@ func TestPutGetDelUint8(t *testing.T) {
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
-	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, "", t1.Get(k2), "t1.Get(k2)")
 	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
 	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
 	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
@@ -429,7 +463,7 @@ func TestPutGetDelUint8(t *testing.T) {
 }
 
 func TestPutGetDelInt8(t *testing.T) {
-	t0 := Map
+	var t0 Map[int8, string]
 
 	k1 := int8(120)
 	v1 := "value1"
@@ -442,7 +476,7 @@ func TestPutGetDelInt8(t *testing.T) {
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
-	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, "", t1.Get(k2), "t1.Get(k2)")
 	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
 	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
 	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
@@ -450,7 +484,7 @@ func TestPutGetDelInt8(t *testing.T) {
 }
 
 func TestPutGetDelString(t *testing.T) {
-	t0 := Map
+	var t0 Map[string, string]
 
 	k1 := "First Key"
 	v1 := "value1"
@@ -463,7 +497,7 @@ func TestPutGetDelString(t *testing.T) {
 	t3 := t2.Del(k1)
 
 	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
-	assert.Equal(t, nil, t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, "", t1.Get(k2), "t1.Get(k2)")
 	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
 	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
 	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
@@ -471,7 +505,7 @@ func TestPutGetDelString(t *testing.T) {
 }
 
 func TestPutGetDel(t *testing.T) {
-	t0 := Map.WithHasher(Bole32)
+	var t0 Map[string, string]
 
 	key := "hello"
 	val := "world"
@@ -486,13 +520,13 @@ func TestPutGetDel(t *testing.T) {
 	assert.EqualInt(t, 0, t0.Len(), "t0.Len()")
 	assert.EqualInt(t, 1, t1.Len(), "t1.Len()")
 	assert.EqualInt(t, 0, t2.Len(), "t2.Len()")
-	assert.Equal(t, true, t1.Get(key) != nil, "t1.Get(%q) != nil", key)
-	assert.Equal(t, true, t2.Get(key) == nil, "t2.Get(%q) == nil", key)
+	assert.Equal(t, true, t1.Get(key) != "", "t1.Get(%q) != nil", key)
+	assert.Equal(t, true, t2.Get(key) == "", "t2.Get(%q) == nil", key)
 }
 
 func TestStringer(t *testing.T) {
-	m := Map.Set("Hello", "World!")
-	x := Map.WithHasher(Bole32).Set("Hello", "World!").Set("Hi", "There!")
+	m := Map[string, string]{}.Set("Hello", "World!")
+	x := Map[string, string]{}.Set("Hello", "World!").Set("Hi", "There!")
 
 	assert.EqualString(t, `{Hello:World!}`, m.String(), "m.String()")
 	assert.EqualString(t, `{Hello:World!, Hi:There!}`, x.String(), "x.String()")
@@ -579,80 +613,6 @@ func TestIndex(t *testing.T) {
 	}
 	for i, test := range tests {
 		assert.EqualInt(t, test.exp, test.got, "test #%d", i)
-	}
-}
-
-func TestSize(t *testing.T) {
-	const arch = int(2 - uint64(^uint(0))>>63)
-
-	assert.EqualInt(t, 32/arch, int(unsafe.Sizeof(amt{})), "unsafe.Sizeof(amt{})")
-	assert.EqualInt(t, 40/arch, int(unsafe.Sizeof(entry{})), "unsafe.Sizeof(entry{})")
-	assert.EqualInt(t, 32/arch, int(unsafe.Sizeof(Hamt{})), "unsafe.Sizeof(Hamt{})")
-	assert.EqualInt(t, 40/arch, int(unsafe.Sizeof(HamtX{})), "unsafe.Sizeof(HamtX{})")
-
-	t0 := &amt{}
-	t1 := t0.set(0, 0, "Hello", "World!")
-
-	assert.EqualInt(t, 8/arch, int(unsafe.Sizeof(t1.entries[0])), "unsafe.Sizeof(t1.entries[0])")
-	assert.EqualInt(t, 32/arch, t0.size(), "t0.size()")
-	assert.EqualInt(t, (32+8+40)/arch, t1.size(), "t1.size()")
-	assert.EqualInt(t, 1, t1.len(), "t1.Len()")
-	assert.EqualInt(t, 1, t1.depth(), "t1.Depth()")
-
-	m0 := Map.WithHasher(Bole32)
-	m1 := m0.Set("Hello", "World!")
-	m2 := m1.Set("He11o", "There!")
-
-	assert.EqualInt(t, (8+32)/arch, m0.Size(), "m0.Size()")
-	assert.EqualInt(t, 1, m1.Len(), "m1.Len()")
-	assert.EqualInt(t, 1, m1.Depth(), "m1.Depth()")
-	assert.EqualInt(t, (8+(32+8+40))/arch, m1.Size(), "m1.Size()")
-	assert.EqualInt(t, 2, m2.Len(), "m2.Len()")
-	assert.EqualInt(t, 4, m2.Depth(), "m2.Depth()")
-	assert.EqualInt(t, (8+(32+8+40)+(32+8+40)+(32+8+40)+(32+2*(8+40)))/arch, m2.Size(), "m2.Size()")
-}
-
-func TestBole32(t *testing.T) {
-	h := func(h uint32, k any) uint32 {
-		return h
-	}
-	tests := []struct{ exp, got uint32 }{
-		{exp: 0, got: h(Bole32(string([]byte{})))},
-		{exp: 0, got: h(Bole32(string([]byte{0})))},
-		{exp: 256, got: h(Bole32(string([]byte{0, 1})))},
-		{exp: 1, got: h(Bole32(string([]byte{0x01, 0x00})))},
-		{exp: 0x4321, got: h(Bole32(string([]byte{0x21, 0x43})))},
-		{exp: 0x654321, got: h(Bole32(string([]byte{0x21, 0x43, 0x65})))},
-		{exp: 0x87654321, got: h(Bole32(string([]byte{0x21, 0x43, 0x65, 0x87})))},
-		{exp: 0x87654321, got: h(Bole32(string([]byte{0x21, 0x43, 0x65, 0x87, 0x09})))},
-	}
-	for i, test := range tests {
-		assert.Equal(t, test.exp, test.got, "test #%d", i)
-	}
-
-	hash, _ := Bole32([]byte{1, 2, 3})
-	assert.EqualInt(t, 0, int(hash), "hash, _ := Bole32(); hash")
-}
-
-// Bole32 returns the head of a string as a uint32 in Little Endian Byte
-// Order.
-func Bole32(key any) (uint32, any) {
-	switch k := key.(type) {
-	case string:
-		switch len(k) {
-		case 0:
-			return 0, key
-		case 1:
-			return uint32(k[0]), key
-		case 2:
-			return uint32(k[0]) | uint32(k[1])<<8, key
-		case 3:
-			return uint32(k[0]) | uint32(k[1])<<8 | uint32(k[2])<<16, key
-		default:
-			return uint32(k[0]) | uint32(k[1])<<8 | uint32(k[2])<<16 | uint32(k[3])<<24, key
-		}
-	default:
-		return 0, key
 	}
 }
 
