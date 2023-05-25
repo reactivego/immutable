@@ -22,6 +22,7 @@ func main() {
 	m = m.Set("Hello", "World!")
 
 	fmt.Println(m)
+
 	// Output:
 	// {Hello:World!}
 }
@@ -131,7 +132,7 @@ func main() {
 	fmt.Printf("%+v\n", store.Get(Topic{Name: "Mammalia"}))
 	fmt.Printf("%+v\n", store.Get(Topic{Name: "Aves"}))
 
-    // Output:
+	// Output:
 	// {Name:Mammalia Description:This topic is about mammals}
 	// {Name:Aves Description:This topic is about birds.}
 }
