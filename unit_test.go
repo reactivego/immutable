@@ -527,9 +527,10 @@ func TestPutGetDel(t *testing.T) {
 func TestStringer(t *testing.T) {
 	m := Map[string, string]{}.Set("Hello", "World!")
 	x := Map[string, string]{}.Set("Hello", "World!").Set("Hi", "There!")
+	x = x.Del("Hello")
 
 	assert.EqualString(t, `{Hello:World!}`, m.String(), "m.String()")
-	assert.EqualString(t, `{Hello:World!, Hi:There!}`, x.String(), "x.String()")
+	assert.EqualString(t, `{Hi:There!}`, x.String(), "x.String()")
 }
 
 func TestPresent(t *testing.T) {
