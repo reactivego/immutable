@@ -1,6 +1,7 @@
 package immutable
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -615,6 +616,251 @@ func TestIndex(t *testing.T) {
 	for i, test := range tests {
 		assert.EqualInt(t, test.exp, test.got, "test #%d", i)
 	}
+}
+
+func TestRangeEarlyTermination(t *testing.T) {
+	// Keys 0 and 32 share the same lower 5 bits, so they collide at
+	// level 0 and create a nested node (depth > 1). Key 1 sits at a
+	// separate slot in the top-level node.
+	var m Map[int, string]
+	m = m.Set(0, "zero").Set(1, "one").Set(32, "thirty-two")
+
+	assert.Equal(t, true, m.Depth() > 1, "m.Depth() > 1")
+	assert.EqualInt(t, 3, m.Len(), "m.Len()")
+
+	// Early termination: callback returns false on the first call.
+	// Without the foreach fix this would visit 2 entries because the
+	// outer loop continued after the nested foreach returned.
+	count := 0
+	m.Range(func(key int, value string) bool {
+		count++
+		return false
+	})
+	assert.EqualInt(t, 1, count, "Range early termination")
+
+	// Also verify that stopping after 2 yields exactly 2.
+	count = 0
+	m.Range(func(key int, value string) bool {
+		count++
+		return count < 2
+	})
+	assert.EqualInt(t, 2, count, "Range stop after 2")
+}
+
+func TestSetComplete(t *testing.T) {
+	var s0 Set[string]
+
+	// Empty set
+	assert.EqualInt(t, 0, s0.Len(), "s0.Len()")
+	assert.EqualInt(t, 1, s0.Depth(), "s0.Depth()")
+	assert.EqualString(t, "{}", s0.String(), "s0.String()")
+
+	c := 0
+	s0.Range(func(k string) bool { c++; return true })
+	assert.EqualInt(t, 0, c, "s0.Range()")
+
+	// Del on empty is no-op
+	s0d := s0.Del("nonexistent")
+	assert.EqualInt(t, 0, s0d.Len(), "s0.Del(nonexistent).Len()")
+
+	// Build set
+	s1 := s0.Put("first")
+	s2 := s1.Put("second")
+	s3 := s2.Put("third")
+
+	// Len
+	assert.EqualInt(t, 1, s1.Len(), "s1.Len()")
+	assert.EqualInt(t, 2, s2.Len(), "s2.Len()")
+	assert.EqualInt(t, 3, s3.Len(), "s3.Len()")
+
+	// Depth
+	assert.Equal(t, true, s3.Depth() >= 1, "s3.Depth() >= 1")
+
+	// Range
+	count := 0
+	s3.Range(func(k string) bool { count++; return true })
+	assert.EqualInt(t, 3, count, "s3.Range() count")
+
+	// String (single-entry set is deterministic)
+	assert.EqualString(t, "{first}", s1.String(), "s1.String()")
+
+	// Del
+	s4 := s3.Del("second")
+	assert.EqualInt(t, 2, s4.Len(), "s4.Len()")
+	assert.Equal(t, true, s4.Has("first"), "s4.Has(first)")
+	assert.Equal(t, false, s4.Has("second"), "s4.Has(second)")
+	assert.Equal(t, true, s4.Has("third"), "s4.Has(third)")
+
+	// Immutability: s3 unchanged after Del produced s4
+	assert.EqualInt(t, 3, s3.Len(), "s3.Len() after Del")
+	assert.Equal(t, true, s3.Has("second"), "s3.Has(second) after Del")
+}
+
+func TestStoreComplete(t *testing.T) {
+	type composite struct{ name, value string }
+
+	x0 := StoreWith(func(data composite) (string, string) {
+		return data.name, data.value
+	})
+
+	// Empty store
+	assert.EqualInt(t, 0, x0.Len(), "x0.Len()")
+	assert.EqualInt(t, 1, x0.Depth(), "x0.Depth()")
+	assert.EqualString(t, "{}", x0.String(), "x0.String()")
+
+	c := 0
+	x0.Range(func(k string, v string) bool { c++; return true })
+	assert.EqualInt(t, 0, c, "x0.Range()")
+
+	// Del on empty is no-op
+	x0d := x0.Del(composite{"nonexistent", ""})
+	assert.EqualInt(t, 0, x0d.Len(), "x0.Del(nonexistent).Len()")
+
+	// Build store
+	x1 := x0.Put(composite{"first", "clown"})
+	x2 := x1.Put(composite{"second", "joker"})
+	x3 := x2.Put(composite{"third", "jester"})
+
+	// Len
+	assert.EqualInt(t, 1, x1.Len(), "x1.Len()")
+	assert.EqualInt(t, 2, x2.Len(), "x2.Len()")
+	assert.EqualInt(t, 3, x3.Len(), "x3.Len()")
+
+	// Depth
+	assert.Equal(t, true, x3.Depth() >= 1, "x3.Depth() >= 1")
+
+	// Range
+	count := 0
+	x3.Range(func(k string, v string) bool { count++; return true })
+	assert.EqualInt(t, 3, count, "x3.Range() count")
+
+	// String (single-entry store is deterministic)
+	assert.EqualString(t, "{first:clown}", x1.String(), "x1.String()")
+
+	// Del
+	x4 := x3.Del(composite{"second", ""})
+	assert.EqualInt(t, 2, x4.Len(), "x4.Len()")
+	assert.Equal(t, true, x4.Has(composite{"first", ""}), "x4.Has(first)")
+	assert.Equal(t, false, x4.Has(composite{"second", ""}), "x4.Has(second)")
+	assert.Equal(t, true, x4.Has(composite{"third", ""}), "x4.Has(third)")
+
+	// Immutability: x3 unchanged after Del produced x4
+	assert.EqualInt(t, 3, x3.Len(), "x3.Len() after Del")
+	assert.Equal(t, true, x3.Has(composite{"second", ""}), "x3.Has(second) after Del")
+}
+
+func TestMapXLookup(t *testing.T) {
+	EnableHashCollision = false
+	m := MapWith[string, string](func(a any) ([]byte, error) {
+		return []byte(a.(string)), nil
+	})
+
+	m = m.Set("hello", "world")
+
+	v, ok := m.Lookup("hello")
+	assert.Equal(t, true, ok, "Lookup found")
+	assert.Equal(t, "world", v, "Lookup value")
+
+	v, ok = m.Lookup("missing")
+	assert.Equal(t, false, ok, "Lookup not found")
+	assert.Equal(t, "", v, "Lookup zero value")
+}
+
+func TestMapXRange(t *testing.T) {
+	EnableHashCollision = false
+	m := MapWith[string, string](func(a any) ([]byte, error) {
+		return []byte(a.(string)), nil
+	})
+
+	m = m.Set("a", "1").Set("b", "2").Set("c", "3")
+
+	count := 0
+	m.Range(func(k string, v string) bool {
+		count++
+		return true
+	})
+	assert.EqualInt(t, 3, count, "MapX.Range() count")
+}
+
+func TestMapXMarshalError(t *testing.T) {
+	errMarshal := func(a any) ([]byte, error) {
+		return nil, fmt.Errorf("marshal error")
+	}
+	m := MapWith[string, string](errMarshal)
+
+	// Has panic
+	func() {
+		defer func() { assert.Equal(t, UnhashableKeyType, recover(), "Has panic") }()
+		m.Has("key")
+	}()
+
+	// Get panic
+	func() {
+		defer func() { assert.Equal(t, UnhashableKeyType, recover(), "Get panic") }()
+		m.Get("key")
+	}()
+
+	// Set panic
+	func() {
+		defer func() { assert.Equal(t, UnhashableKeyType, recover(), "Set panic") }()
+		m.Set("key", "val")
+	}()
+
+	// Del panic
+	func() {
+		defer func() { assert.Equal(t, UnhashableKeyType, recover(), "Del panic") }()
+		m.Del("key")
+	}()
+
+	// Lookup panic
+	func() {
+		defer func() { assert.Equal(t, UnhashableKeyType, recover(), "Lookup panic") }()
+		m.Lookup("key")
+	}()
+}
+
+func TestPutGetDelUint(t *testing.T) {
+	var t0 Map[uint, string]
+
+	k1 := uint(120)
+	v1 := "value1"
+
+	k2 := uint(240)
+	v2 := "value2"
+
+	t1 := t0.Set(k1, v1)
+	t2 := t1.Set(k2, v2)
+	t3 := t2.Del(k1)
+
+	assert.Equal(t, v1, t1.Get(k1), "t1.Get(k1)")
+	assert.Equal(t, "", t1.Get(k2), "t1.Get(k2)")
+	assert.Equal(t, v1, t2.Get(k1), "t2.Get(k1)")
+	assert.Equal(t, v2, t2.Get(k2), "t2.Get(k2)")
+	assert.Equal(t, false, t3.Has(k1), "t3.Has(k1)")
+	assert.Equal(t, true, t3.Has(k2), "t3.Has(k2)")
+}
+
+func TestEmptyMapOperations(t *testing.T) {
+	var m Map[string, string]
+
+	// Del on empty
+	m2 := m.Del("nonexistent")
+	assert.EqualInt(t, 0, m2.Len(), "empty.Del().Len()")
+
+	// Range on empty
+	count := 0
+	m.Range(func(k string, v string) bool { count++; return true })
+	assert.EqualInt(t, 0, count, "empty.Range()")
+
+	// Has/Get/Lookup on empty
+	assert.Equal(t, false, m.Has("x"), "empty.Has()")
+	assert.Equal(t, "", m.Get("x"), "empty.Get()")
+	v, ok := m.Lookup("x")
+	assert.Equal(t, false, ok, "empty.Lookup() ok")
+	assert.Equal(t, "", v, "empty.Lookup() val")
+
+	// String on empty
+	assert.EqualString(t, "{}", m.String(), "empty.String()")
 }
 
 var assert = struct {

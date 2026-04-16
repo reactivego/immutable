@@ -83,16 +83,19 @@ func (n amt[K, V]) lookup(prefix uint32, shift uint8, key K) (V, bool) {
 	}
 }
 
-func (n amt[K, V]) foreach(f func(K, V) bool) {
+func (n amt[K, V]) foreach(f func(K, V) bool) bool {
 	for _, e := range n.entries {
 		if a, ok := e.ref.(amt[K, V]); ok {
-			a.foreach(f)
+			if !a.foreach(f) {
+				return false
+			}
 		} else {
 			if !f(e.ref.(K), e.value) {
-				return
+				return false
 			}
 		}
 	}
+	return true
 }
 
 func (n amt[K, V]) string() string {
